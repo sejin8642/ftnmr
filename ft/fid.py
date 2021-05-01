@@ -21,7 +21,7 @@ class fid():
         else:
             raise Exception('Incorrect time unit is specified')
 
-        # Below sampling rate samples approximately 20 in one period of larmor precession
+        # Below sampling rate samples at least 20 in one period of larmor precession
         self.SR = round(0.31415/self.w, int(-np.log10(0.31415/self.w)) + 1)
         self.t = np.linspace(0, 6*T2 - self.SR, int(6*T2/self.SR))
 
