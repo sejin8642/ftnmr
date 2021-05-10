@@ -12,12 +12,14 @@ class fid():
         self.shift = shift
         self.T2 = T2
         self.gamma = 267.52218744*pow(10,6)
+        # the lowest angular frequency used as a chemical shift reference
+        self.ref_w = self.B*self.gamma
 
         # Signal frequency is adjusted according to the chemical shift
         if timeunit == 'msec':
-            self.w = pow(10, -9)*self.shift*self.gamma*self.B
+            self.w = pow(10, -9)*self.shift*self.ref_w
         elif timeunit == 'micron':
-            self.w = pow(10, -12)*self.shift*self.gamma*self.B
+            self.w = pow(10, -12)*self.shift*self.ref_w
         else:
             raise Exception('Incorrect time unit is specified')
 
