@@ -1,0 +1,2 @@
+\contentsline {section}{\numberline {1}Free Induction Decay}{1}%
+\contentsline {subsection}{\numberline {1.1}What is FID?}{1}%
