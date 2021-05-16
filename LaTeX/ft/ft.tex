@@ -5,7 +5,14 @@
 \usepackage{makeidx}
 \makeindex
 
+% List of macros
+\newcommand{\fourier}[2]{\mathcal{F}_{#1}[#2]}
+
+% Numbering equations with section number
+\numberwithin{equation}{section}
+
 \begin{document}
+% Front cover page with title and name
 \begin{titlepage}
 	\begin{center}
 		stupid title\\
@@ -17,18 +24,29 @@
 	\end{flushright}
 \end{titlepage}
 
+% Table of Contents
 \pagenumbering{roman}
 \tableofcontents
 \clearpage
 
+% First Section
 \pagenumbering{arabic}
 \section{Free Induction Decay}
 Here describes what FID\index{FID} is. \lipsum[1]
 \subsection{What is FID?}
 FID is an acronym for free induction decay
-\begin{center}
-\textbf{\large Fourier Transform}
-\end{center}
+
+% Second Section
+\section{Fourier Transform}
+\lipsum[2]
+\subsection{Continuous Fourier Transform}
+\begin{equation}
+	\begin{aligned}[b]
+		X(f)	&= \fourier{t}{x}\\
+			&= \int_{-\infty}^{\infty}
+	\end{aligned}
+\end{equation}
+
 \begin{enumerate}
 	% first question
 	\item Let's see if the pdf \index{stupid file} automatically reloads after building a modified pdf. Please write your lab number at the top right corner of this quiz as well as your signature. On the back of this quiz, please write your name.\vspace{0.25cm}
