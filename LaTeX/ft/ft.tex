@@ -7,6 +7,7 @@
 
 % List of macros
 \newcommand{\fourier}[2]{\mathcal{F}_{#1}[#2]}
+\newcommand{\fint}{\int_{-\infty}^{\infty}}
 
 % Numbering equations with section number
 \numberwithin{equation}{section}
@@ -15,12 +16,13 @@
 % Front cover page with title and name
 \begin{titlepage}
 	\begin{center}
-		stupid title\\
-		[10cm]
+		% \vfill must have preceding text line
+		\Huge Title goes here \vfill 
 	\end{center}
 
 	\begin{flushright}
-		Sejin Nam
+		Sejin Nam\\
+		University of Hawaii at Manoa
 	\end{flushright}
 \end{titlepage}
 
@@ -31,22 +33,45 @@
 
 % First Section
 \pagenumbering{arabic}
-\section{Free Induction Decay}
-Here describes what FID\index{FID} is. \lipsum[1]
-\subsection{What is FID?}
-FID is an acronym for free induction decay
-
+\section{Prerequisite Mathematics}
+A few prerequisite mathematics will be discussed here in anticipation of their requirements in the subsequent sections after this section. 
+\subsection{Dirac Delta Function}\index{Dirac Delta function}
+Dirac Delta function, \(\delta (t)\), has the following property:
+\begin{align}
+	\delta (t)	&=\begin{cases}
+		\infty, & \text{if } t = 0 \\
+		0,	& \text{otherwise}
+	\end{cases}\\
+		1	&= \fint \delta (t) dt
+\end{align}
+The following integral is also a Dirac Delta function:
+\begin{align}
+	\delta (t) = \fint e^{2\pi ift} df\label{eq:1}
+\end{align}
+The above relations will be used throughout the discussion of this article.
 % Second Section
 \section{Fourier Transform}
-\lipsum[2]
+Fourier transform is a mathematical transformation, in the context of my discussion, that maps one function in time domain into another function in frequency domain. There are two types of FT, Fourier transform in short: continuous and discrete. Discrete FT is of great importance in many modern data processing application as modern computers are digital, meaning they perform computation in discrete manner. I'll discuss a continous case first before moving onto the discrete case.
+
 \subsection{Continuous Fourier Transform}
+Consider a continuous function of \(t\), \(x(t)\). The continuous FT of \(x\) is as follows:
 \begin{equation}
 	\begin{aligned}[b]
-		X(f)	&= \fourier{t}{x}\\
-			&= \int_{-\infty}^{\infty}
+		\fourier{t}{x}	&= \fint x(t)e^{-2\pi ift} dt \\
+				&= X(f)
 	\end{aligned}
 \end{equation}
-
+\(X(f)\) is also continuous in \(f\). You can also perform inverse FT on \(X\), which is:
+\begin{equation}
+	\begin{aligned}[b]
+		\fourier{f}{X}	&= \fint X(f)e^{2\pi ift} df \\
+				&= \fint \fint x(\tau)e^{-2\pi if\tau} d\tau\ e^{2\pi ift} df \\
+				&= \fint x(\tau) \fint e^{2\pi if(t - \tau)} df d\tau \\
+				&= \fint x(\tau) \delta (t - \tau) d\tau \\
+				&= x(t)
+	\end{aligned}
+\end{equation}
+where I used \eqref{eq:1}
 \begin{enumerate}
 	% first question
 	\item Let's see if the pdf \index{stupid file} automatically reloads after building a modified pdf. Please write your lab number at the top right corner of this quiz as well as your signature. On the back of this quiz, please write your name.\vspace{0.25cm}
