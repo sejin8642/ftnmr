@@ -25,8 +25,7 @@ sudo dnf install python3
 
 ## Anaconda 
 
-I highly recommend that you install Anaconda and use it to manage all of your python packages and libraries in order to streamline your workflow. The link is [here][homepage].
-[homepage]:https://docs.anaconda.com/anaconda/install/linux/
+I highly recommend that you install Anaconda and use it to manage all of your python packages and libraries in order to streamline your workflow. The link is [here](https://docs.anaconda.com/anaconda/install/linux).
 
 ### Python packages and libraries 
 
@@ -53,5 +52,5 @@ See also the list of [contributors](https://github.com/sejin8642/ftnmr/contribut
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE.txt) file for details.
 
