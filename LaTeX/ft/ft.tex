@@ -46,7 +46,7 @@ Dirac Delta function, \(\delta (t)\), has the following property:
 	\end{cases}\\
 		1	&= \fint \delta (t) dt
 \end{align}
-The following integral is also a Dirac Delta function:
+(In my discussion of function, \(t\) variable represents time physicall). The following integral is also a Dirac Delta function:
 \begin{align}
 	\delta (t) = \fint e^{2\pi ift} df\label{eq:1}
 \end{align}
@@ -65,7 +65,7 @@ Consider a continuous function of \(t\), \(x(t)\). The continuous FT of \(x\) is
 				&= X(f)
 	\end{aligned}
 \end{equation}
-\(X(f)\) is also continuous in \(f\). You can also perform inverse FT on \(X\), which is:
+\(X(f)\) is also continuous in \(f\) (in my discussion \(f\) represents frequency physically). You can also perform inverse FT on \(X\), which is:
 \begin{equation}
 	\begin{aligned}[b]
 		\fourier{f}{X}	&= \fint X(f)e^{2\pi ift} df \\
@@ -78,6 +78,15 @@ Consider a continuous function of \(t\), \(x(t)\). The continuous FT of \(x\) is
 where I used \eqref{eq:1} orthogonality relation.
 
 % 2.1.1 Sinusoidal exponential decay signal
-\subsubsection{Damped sinusoidal wave}
+\subsubsection{Sinusoidal exponential decay function}
+Sinusoidal exponential decay (I call it SED) function is as follows:
+\begin{align}
+	S &= S_{0}\cos{(2\pi ft)}e^{-t/T}
+\end{align}
+You can have sine instead of cosine in the above expression. For our discussion, SED of choice is combination of sine and cosine exponential decays:
+\begin{align}
+	S &= S_{0}e^{2\pi ift}e^{-t/T}
+\end{align}
+The real part or the imaginary part can represent a real physical signal.
 \printindex
 \end{document}
