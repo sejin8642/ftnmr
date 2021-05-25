@@ -73,15 +73,19 @@ Fourier transform is a mathematical transformation, in the context of my discuss
 Consider a continuous function of \(t\), \(x(t)\). The continuous FT of \(x\) is as follows:
 \begin{equation}
 	\begin{aligned}[b]
-		\fourier{t}{x}	&= \ft{t}{x}\\
-				&= X(f)
+		X(f)	&=\fourier{t}{x} \\
+			&=\ft{t}{x(t)}
 	\end{aligned}
 \end{equation}
 \(X(f)\) is also continuous in \(f\) (in my discussion \(f\) represents frequency physically). You can also perform inverse FT on \(X\), which is:
 \begin{equation}
 	\begin{aligned}[b]
 		\fourier{f}{X}	&= \ift{f}{X(f)} \\
+<<<<<<< HEAD
 				&= \ift{f}{\ft{\tau}{x(\tau)}}\\
+=======
+				&= \ift{f}{\left ( \ft{\tau}{x(\tau)}\right )} \\
+>>>>>>> 8de4663491e59ca63461f114075e50ecd3612eed
 				&= \fint x(\tau) \fint e^{2\pi if(t - \tau)} df d\tau \\
 				&= \fint x(\tau) \delta (t - \tau) d\tau \\
 				&= x(t)
@@ -89,31 +93,25 @@ Consider a continuous function of \(t\), \(x(t)\). The continuous FT of \(x\) is
 \end{equation}
 where I used \eqref{eq:dirac} orthogonality relation.
 
-% 2.1.1 Sinusoidal exponential decay signal
-\subsubsection{Sinusoidal exponential decay function}
-Sinusoidal exponential decay (I call it SED) function is as follows:
+% 2.1.1 Sinusoidal exponential decay signal \subsubsection{Sinusoidal exponential decay function} Sinusoidal exponential decay (I call it SED) function is as follows:
 \begin{align}
 	s &= s_{0}\cos{(2\pi f_{0}t)}e^{-t/T} \theta(t)
 \end{align}
-Where \(\theta (t)\) is a Heaviside step function. You can have sine instead of cosine in the above expression. For our discussion, SED of choice is combination of sine and cosine exponential decays:
+Where \(\theta (t)\) is a Heaviside step function. You can have sine instead of cosine in the above expression. For our discussion, SED of choice is combination of sine and cosine exponential decays in complex form:
 \begin{align}
 	s &= \sed{t} \theta (t)
 \end{align}
 The real part or the imaginary part can represent a real physical signal. The FT of SED is (with \(1/T = r\)):
 \begin{equation}
 	\begin{aligned}[b]
-		\def\a{1122}
-		\a = \a \\
-		\fourier{t}{s}	&= \fourier{t}{\sed{t} \theta (t)}\\
-				&= s_{0}\fourier{t}{e^{-rt} \theta (t)}(f - f_{0})\\
-				&= \frac{s_{0}}{r + 2\pi i(f - f_{0})} \\
-				&= s_{0}\frac{r - 2\pi i(f - f_{0})}{r^2 + 4\pi^{2}(f_{0} - f)^2}\\
-				&= s_{0}\left[\frac{r}{r^2 + 4\pi^{2}(f - f_{0})^2} + i\frac{2\pi(f - f_{0})}{r^2 + 4\pi^{2}(f - f_{0})^2} \right]
-				&= S(f) \\
-				&= 11
+		S(f)	&= \fourier{t}{s}\\
+			&= \fourier{t}{\sed{t} \theta (t)}\\
+			&= s_{0}\fourier{t}{e^{-rt} \theta (t)}(f - f_{0})\\
+			&= \frac{s_{0}}{r + 2\pi i(f - f_{0})} \\
+			\gdef\temp{r^2 + 4\pi^{2}(f - f_{0})^2} % temporary macro
+			&= s_{0}\frac{r - 2\pi i(f - f_{0})}{\temp}\\
+			&= s_{0}\left[\frac{r}{\temp} + i\frac{2\pi(f - f_{0})}{\temp} \right]
 	\end{aligned}
 \end{equation}
-\def\babo{1111}
-\babo
 \printindex
 \end{document}
