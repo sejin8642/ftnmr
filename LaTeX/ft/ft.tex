@@ -11,12 +11,12 @@
 \newcommand{\ft}[2]{\fint #2 e^{-2\pi if#1} d#1} % Fourier transform 
 \newcommand{\ift}[2]{\fint #2 e^{2\pi i#1t} d#1} % Inverse Fourier transform 
 \newcommand{\sed}[1]{s_{0}e^{2\pi if_{0}#1}e^{-#1/T}} % Sinusoidal exponential decay function
+
 % Numbering equations with section number
 \numberwithin{equation}{section}
 
 \begin{document}
 % Front cover page with title and name
-
 \begin{titlepage}
 	\begin{center}
 		% \vfill must have preceding text line
@@ -58,7 +58,7 @@ Dirac Delta function, \(\delta (t)\), has the following property:
 	\end{cases}\\
 		1	&= \fint \delta (t) dt
 \end{align}
-(In my discussion of function, \(t\) variable represents time physicall). The following integral is also a Dirac Delta function:
+(In my discussion of function, \(t\) variable represents time physically). The following integral is also a Dirac Delta function:
 \begin{align}
 	\delta (t) = \fint e^{2\pi ift} df\label{eq:dirac}
 \end{align}
@@ -81,11 +81,8 @@ Consider a continuous function of \(t\), \(x(t)\). The continuous FT of \(x\) is
 \begin{equation}
 	\begin{aligned}[b]
 		\fourier{f}{X}	&= \ift{f}{X(f)} \\
-<<<<<<< HEAD
 				&= \ift{f}{\ft{\tau}{x(\tau)}}\\
-=======
 				&= \ift{f}{\left ( \ft{\tau}{x(\tau)}\right )} \\
->>>>>>> 8de4663491e59ca63461f114075e50ecd3612eed
 				&= \fint x(\tau) \fint e^{2\pi if(t - \tau)} df d\tau \\
 				&= \fint x(\tau) \delta (t - \tau) d\tau \\
 				&= x(t)
