@@ -8,8 +8,8 @@
 % List of macros
 \newcommand{\fourier}[2]{\mathcal{F}_{#1}[#2]} % Fourier transform notation
 \newcommand{\fint}{\int_{-\infty}^{\infty}} % integral with infinite limits
-\newcommand{\ft}[2]{\fint #2(#1) e^{-2\pi if#1} d#1} % Fourier transform 
-\newcommand{\ift}[2]{\fint #2(#1) e^{2\pi i#1t} d#1} % Inverse Fourier transform 
+\newcommand{\ft}[2]{\fint #2 e^{-2\pi if#1} d#1} % Fourier transform 
+\newcommand{\ift}[2]{\fint #2 e^{2\pi i#1t} d#1} % Inverse Fourier transform 
 \newcommand{\sed}[1]{s_{0}e^{2\pi if_{0}#1}e^{-#1/T}} % Sinusoidal exponential decay function
 % Numbering equations with section number
 \numberwithin{equation}{section}
@@ -80,8 +80,8 @@ Consider a continuous function of \(t\), \(x(t)\). The continuous FT of \(x\) is
 \(X(f)\) is also continuous in \(f\) (in my discussion \(f\) represents frequency physically). You can also perform inverse FT on \(X\), which is:
 \begin{equation}
 	\begin{aligned}[b]
-		\fourier{f}{X}	&= \ift{f}{X} \\
-				&= \fint \left({\ft{\tau}{x}}\right) e^{2\pi ift} df\\
+		\fourier{f}{X}	&= \ift{f}{X(f)} \\
+				&= \ift{f}{\ft{\tau}{x(\tau)}}\\
 				&= \fint x(\tau) \fint e^{2\pi if(t - \tau)} df d\tau \\
 				&= \fint x(\tau) \delta (t - \tau) d\tau \\
 				&= x(t)
