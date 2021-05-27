@@ -16,8 +16,9 @@
 \newcommand{\ift}[2]{\fint #2 e^{2\pi i#1t} d#1} % Inverse Fourier transform 
 \newcommand{\sed}[1]{s_{0}e^{2\pi if_{0}#1}e^{-#1/T}} % Sinusoidal exponential decay function
 
-% Numbering equations with section number
+% Numbering  with section number
 \numberwithin{equation}{section}
+\numberwithin{figure}{section}
 
 % Centering section titles
 \sectionfont{\centering}
@@ -45,13 +46,15 @@
 \clearpage
 \end{comment}
 
+% page numbering in roman numerals
+\pagenumbering{roman}
+
 % Preface
 \section*{\centering Preface}
 Preface text goes here
 \cleardoublepage
 
 % Table of Contents
-\pagenumbering{roman}
 \tableofcontents
 \clearpage
 
@@ -78,6 +81,32 @@ Dirac Delta function, \(\delta (t)\), has the following property:
 	\delta (t)	&= \ift{f}{}\label{eq:dirac}
 \end{align}
 The above relations will be used throughout the discussion of this article.
+
+% 1.2 Sinusoidal expoential decay function
+\subsection{Sinusoidal exponential decay function}
+Sinusoidal exponential decay function (I call it SED) is as follows:
+\begin{equation}
+	\begin{aligned}[b]
+		s &= s_{0}\cos{(2\pi f_{0}t)}e^{-t/T} \theta(t)
+	\end{aligned}
+\end{equation}
+Where \(\theta (t)\) is a Heaviside step function. The plot of such function is:
+\begin{figure}[H]
+	\centering
+	\includegraphics[height=3in]{sed.eps}
+	\caption[Optional caption]{sed function plot, s vs. t with \(s_{0} = 1\)}
+	\label{fig1}
+\end{figure}
+You can have sine instead of cosine in the above expression. For our discussion, SED of choice is combination of sine and cosine exponential decays in complex form:
+\begin{equation}
+	\begin{aligned}[b]
+		s	&= s_{0}\cos{(2\pi f_{0}t)}e^{-t/T} \theta(t)+ i s_{0}\sin{(2\pi f_{0}t)}e^{-t/T} \theta(t)\\
+			&= (\cos{(2\pi f_{0}t)} +i \sin{(2\pi f_{0}t)})s_{0}e^{-t/T} \theta(t) \\
+			&= \sed{t} \theta (t)
+			\label{eq:sed}
+	\end{aligned}
+\end{equation}
+The real part of \eqref{eq:sed} is also represented by the figure \ref{fig1} 
 \clearpage
 
 % Second Section: Fourier transform
@@ -106,15 +135,8 @@ Consider a continuous function of \(t\), \(x(t)\). The continuous FT of \(x\) is
 where I used \eqref{eq:dirac} orthogonality relation. It is easy to see that the inverse FT of one is a Dirac Delta function.
 
 % 2.1.1 Sinusoidal exponential decay signal \subsubsection{Sinusoidal exponential decay function} Sinusoidal exponential decay (I call it SED) function is as follows:
-\subsubsection{Sinusoidal exponential decay function}
-\begin{align}
-	s &= s_{0}\cos{(2\pi f_{0}t)}e^{-t/T} \theta(t)
-\end{align}
-Where \(\theta (t)\) is a Heaviside step function. You can have sine instead of cosine in the above expression. For our discussion, SED of choice is combination of sine and cosine exponential decays in complex form:
-\begin{align}
-	s &= \sed{t} \theta (t)
-\end{align}
-The real part or the imaginary part can represent a real physical signal. The FT of SED is (with \(1/T = r\)):
+\subsubsection{FT of SED}
+The FT of SED is (with \(1/T = r\)) as follows:
 \begin{equation}
 	\begin{aligned}[b]
 		S(f)	&= \fourier{t}{s}\\

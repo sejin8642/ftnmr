@@ -7,7 +7,7 @@ proton gyromagnetic ratio: https://physics.nist.gov/cgi-bin/cuu/Value?gammap
 import numpy as np
 
 class fid():
-    def __init__(self, B=1.5, shift=0, T2=2000, timeunit='msec'):
+    def __init__(self, timeunit='msec', B=1.5, shift=0, T2=2000, sip=40):
         self.B = B #approximately 2000 msec is T2 for water/CSF at 1.5T
         self.shift = shift
         self.T2 = T2
@@ -23,12 +23,14 @@ class fid():
         else:
             raise Exception('Incorrect time unit is specified')
 
-        # Below sampling rate samples at least 20 in one period of larmor precession
-        if self.shift == 0:
-            self.t = np.linspace(0, 99, 100)
+        # sampling rate and independent time variables (sample duration ~ 6*T2)
+        if self.shift == 0: # 103 samples total when there is no oscillation
+            self.t = np.linspace(0, 6*T2, 6*17 + 1)
+            self.SR = 17/T2
         else:
-            self.SR = round(0.31415/self.w, int(-np.log10(0.31415/self.w)) + 1)
-            self.t = np.linspace(0, 6*T2 - self.SR, int(6*T2/self.SR))
+            self.SR = 0.5*sip*self.w/np.pi
+            ns = int(6*T2*self.SR) + 1 # total number of samples including t = 0 
+            self.t = np.linspace(0, (ns - 1)/self.SR , ns)
 
     def __call__(self):
         return np.exp(-self.t/self.T2)*(np.cos(self.w*self.t) + 1j*np.sin(self.w*self.t))
