@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2020.8.30)  27 MAY 2021 16:31
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2020.8.30)  28 MAY 2021 11:32
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -262,11 +262,11 @@ Excluding 'comment' comment. [1] (./ft.toc)
 
 ]
 Package epstopdf Info: Source file: <sed.eps>
-(epstopdf)                    date: 2021-05-27 16:30:49
-(epstopdf)                    size: 10343 bytes
+(epstopdf)                    date: 2021-05-28 11:32:29
+(epstopdf)                    size: 174828 bytes
 (epstopdf)             Output file: <sed-eps-converted-to.pdf>
-(epstopdf)                    date: 2021-05-27 16:19:18
-(epstopdf)                    size: 7635 bytes
+(epstopdf)                    date: 2021-05-28 11:30:24
+(epstopdf)                    size: 7333 bytes
 (epstopdf)             Command: <repstopdf --outfile=sed-eps-converted-to.pdf s
 ed.eps>
 (epstopdf)             \includegraphics on input line 99.
@@ -274,8 +274,8 @@ runsystem(repstopdf --outfile=sed-eps-converted-to.pdf sed.eps)...executed safe
 ly (allowed).
 
 Package epstopdf Info: Result file: <sed-eps-converted-to.pdf>
-(epstopdf)                    date: 2021-05-27 16:31:14
-(epstopdf)                    size: 6100 bytes.
+(epstopdf)                    date: 2021-05-28 11:32:53
+(epstopdf)                    size: 6125 bytes.
 <sed-eps-converted-to.pdf, id=15, 433.62pt x 289.08pt>
 File: sed-eps-converted-to.pdf Graphic file (type pdf)
 <use sed-eps-converted-to.pdf>
@@ -315,13 +315,14 @@ e/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/share/texli
 ve/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texlive/texm
 f-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb></usr/share/texlive/texmf-dist/f
 onts/type1/public/amsfonts/cm/cmr8.pfb></usr/share/texlive/texmf-dist/fonts/typ
-e1/public/amsfonts/cm/cmsl10.pfb></usr/share/texlive/texmf-dist/fonts/type1/pub
-lic/amsfonts/cm/cmsy10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/am
-sfonts/cm/cmsy8.pfb>
-Output written on ft.pdf (6 pages, 127454 bytes).
+e1/public/amsfonts/cm/cmr9.pfb></usr/share/texlive/texmf-dist/fonts/type1/publi
+c/amsfonts/cm/cmsl10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsf
+onts/cm/cmsy10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/c
+m/cmsy8.pfb>
+Output written on ft.pdf (6 pages, 134732 bytes).
 PDF statistics:
- 74 PDF objects out of 1000 (max. 8388607)
- 51 compressed objects within 1 object stream
+ 75 PDF objects out of 1000 (max. 8388607)
+ 53 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  6 words of extra memory for PDF output out of 10000 (max. 10000000)
 
