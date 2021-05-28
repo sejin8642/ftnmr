@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2020.8.30)  28 MAY 2021 11:32
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2020.8.30)  28 MAY 2021 12:34
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -265,24 +265,19 @@ Package epstopdf Info: Source file: <sed.eps>
 (epstopdf)                    date: 2021-05-28 11:32:29
 (epstopdf)                    size: 174828 bytes
 (epstopdf)             Output file: <sed-eps-converted-to.pdf>
-(epstopdf)                    date: 2021-05-28 11:30:24
-(epstopdf)                    size: 7333 bytes
+(epstopdf)                    date: 2021-05-28 11:32:53
+(epstopdf)                    size: 6125 bytes
 (epstopdf)             Command: <repstopdf --outfile=sed-eps-converted-to.pdf s
 ed.eps>
-(epstopdf)             \includegraphics on input line 99.
-runsystem(repstopdf --outfile=sed-eps-converted-to.pdf sed.eps)...executed safe
-ly (allowed).
-
-Package epstopdf Info: Result file: <sed-eps-converted-to.pdf>
-(epstopdf)                    date: 2021-05-28 11:32:53
-(epstopdf)                    size: 6125 bytes.
+(epstopdf)             \includegraphics on input line 108.
+Package epstopdf Info: Output file is already uptodate.
 <sed-eps-converted-to.pdf, id=15, 433.62pt x 289.08pt>
 File: sed-eps-converted-to.pdf Graphic file (type pdf)
 <use sed-eps-converted-to.pdf>
-Package pdftex.def Info: sed-eps-converted-to.pdf  used on input line 99.
+Package pdftex.def Info: sed-eps-converted-to.pdf  used on input line 108.
 (pdftex.def)             Requested size: 542.05014pt x 361.34999pt.
 
-Overfull \hbox (36.16014pt too wide) in paragraph at lines 99--100
+Overfull \hbox (36.16014pt too wide) in paragraph at lines 108--109
  [][] 
  []
 
@@ -319,7 +314,7 @@ e1/public/amsfonts/cm/cmr9.pfb></usr/share/texlive/texmf-dist/fonts/type1/publi
 c/amsfonts/cm/cmsl10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsf
 onts/cm/cmsy10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/c
 m/cmsy8.pfb>
-Output written on ft.pdf (6 pages, 134732 bytes).
+Output written on ft.pdf (6 pages, 134553 bytes).
 PDF statistics:
  75 PDF objects out of 1000 (max. 8388607)
  53 compressed objects within 1 object stream

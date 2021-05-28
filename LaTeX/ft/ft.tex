@@ -16,7 +16,7 @@
 \newcommand{\ift}[2]{\fint #2 e^{2\pi i#1t} d#1} % Inverse Fourier transform 
 \newcommand{\sed}[1]{s_{0}e^{2\pi if_{0}#1}e^{-#1/T}} % Sinusoidal exponential decay function
 
-% Numbering  with section number
+% Numbering equation and figure with section number
 \numberwithin{equation}{section}
 \numberwithin{figure}{section}
 
@@ -91,16 +91,7 @@ Sinusoidal exponential decay function (I call it SED) is as follows:
 		\label{eq:rsed}
 	\end{aligned}
 \end{equation}
-Where \(\theta (t)\) is a Heaviside step function. The plot of such function is given in figure \ref{fig1}:
-
-% figure for sed function
-\begin{figure}[H]
-	\centering
-	\includegraphics[height=5in]{sed.eps}
-	\caption{sed function plot, s vs. t}
-	\label{fig1}
-\end{figure}
-You can have sine instead of cosine in the above expression. For our discussion, SED of choice is combination of sine and cosine exponential decays in complex form:
+Where \(\theta (t)\) is a Heaviside step function (the plot of such function is given in figure \ref{fig1}). You can have sine instead of cosine in the above expression. For our discussion, SED of choice is combination of sine and cosine exponential decays in complex form:
 \begin{equation}
 	\begin{aligned}[b]
 		s	&= s_{0}\cos{(2\pi f_{0}t)}e^{-t/T} \theta(t)+ i s_{0}\sin{(2\pi f_{0}t)}e^{-t/T} \theta(t)\\
@@ -110,6 +101,15 @@ You can have sine instead of cosine in the above expression. For our discussion,
 	\end{aligned}
 \end{equation}
 The real part of \eqref{eq:sed} is simply \eqref{eq:rsed}.
+
+% figure for sed function
+\begin{figure}[H]
+	\centering
+	\includegraphics[height=5in]{sed.eps}
+	\caption{sed function plot, s vs. t}
+	\label{fig1}
+\end{figure}
+
 \clearpage
 
 % Second Section: Fourier transform
