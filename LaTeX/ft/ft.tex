@@ -18,6 +18,7 @@
 \newcommand{\sed}[2]{#2_{0}e^{2\pi if_{0}#1}e^{-#1/T} \theta (#1)} % SED function
 \newcommand{\fsum}[1]{\sum_{#1 = -\infty}^{\infty}}
 \newcommand{\spf}[2]{\Delta #1 \fsum{#2} \delta (#1 - #2 \Delta #1)}
+
 % Numbering equation and figure with section number
 \numberwithin{equation}{section}
 \numberwithin{figure}{section}
@@ -53,7 +54,7 @@
 
 % Preface
 \section*{\centering Preface}
-Fourier transform is a mathematical transformation, in the context of my exposition, that maps one function in time domain into another function in frequency domain. There are two types of FT, Fourier transform in short: continuous and discrete. Discrete FT is of great importance in many modern data processing application as modern computers are digital, meaning they perform computation in discrete manner. In this article, I'll discuss a continous case first before moving onto the discrete case.
+Fourier transform is a mathematical transformation, in the context of my exposition, that maps one function in time domain into another function in frequency domain. In order for a function to have its Fourier transform, the function needs to be Schwartz. However, in Physics, we extend the notion of function to more generalized case, called a generalized function. In a generalized function space, we allow more flexibility so that functions like Dirac delta function can have the Fourier transform even though such function is not Schwartz. In this article I will assume that every function that is discussed has its Fourier transform. I will call Fourier transform FT in short, and there are two types of FT: continuous and discrete. Discrete FT is of great importance in many modern data processing application as modern computers are digital, meaning they perform computation in discrete manner. In this article, I'll discuss a continous case first before moving onto the discrete case.
 \cleardoublepage
 
 % Table of Contents
@@ -66,9 +67,9 @@ Fourier transform is a mathematical transformation, in the context of my exposit
 % First Section: prerequisite mathematics
 \pagenumbering{arabic}
 \section{Prerequisite Mathematics}
-A few prerequisite mathematics will be discussed here first in anticipation of their requirements in the discussion of subsequent sections of Fourier transform. In this article, it is implied that all the functions discussed are \(\mathbb{R} \mapsto \mathbb{C} \), infinitely differentiable, and absolutely integrable unless stated otherwise.  
+A few prerequisite mathematics will be discussed here first in anticipation of their requirements in the discussion of subsequent sections of Fourier transform. In this article, it is implied that all the functions discussed are generalized functions, \(\mathbb{R} \mapsto \mathbb{C} \) (the domain is either \(t\) or \(f\)), and infinitely differentiable unless stated otherwise.  
 
-% 1.1 Dirac Delta Function
+% 1.1 Dirac Delta Functio
 \subsection{Dirac Delta Function}\index{Dirac Delta function}
 The Dirac Delta function, \(\delta (t)\), has the following property:
 \begin{align}
@@ -78,9 +79,15 @@ The Dirac Delta function, \(\delta (t)\), has the following property:
 	\end{cases}\\
 		1	&= \fint \delta (t) dt
 \end{align}
-(In my discussion of function, \(t\) variable represents time physically). The following integral is also the Dirac Delta function:
+(In my discussion of function, \(t\) variable represents time physically). It is easy to check that:
 \begin{align}
-	\delta (t)	&= \ift{f}{}{t}\label{eq:dirac}
+	f(a)		&= \fint f(t) \delta (t) dt \text{ and}\\
+	\delta (t)	&= \delta (-t)
+\end{align}
+Also, the following integral is the Dirac Delta function as well:
+\begin{align}
+	\delta (t)	&= \ift{f}{}{t}
+	\label{eq:dirac}
 \end{align}
 The above relations will be used throughout the discussion of this article.
 
@@ -123,20 +130,21 @@ The function is periodic with the period being the sampling interval.
 \end{figure}
 
 
-\clearpage
 % Second Section: Continuou Fourier transform
+\clearpage
 \section{Continuous Fourier Transform}\index{Fourier transform}
+Continuous FT transforms a complex-valued function in \(t\) to another complex-valued function in \(f\). Also, as we will see, the inverse FT of the function in \(f\) will recover the original function in \(t\). 
 
 % 2.1 Definition of Fourier transform
 \subsection{Definition of Fourier transform}
-Consider a continuous function of \(t\), \(x(t)\). The continuous FT of \(x\), \(X(f)\), is as follows:
+Consider a function of \(t\), \(x(t)\). The continuous FT of \(x\), \(X(f)\), is as follows:
 \begin{equation}
 	\begin{aligned}[b]
 		X(f)	&=\fourier{t}{x} \\
 			&=\ft{t}{x(t)}{f}
 	\end{aligned}
 \end{equation}
-\(X(f)\) is also continuous in \(f\) (in my discussion \(t\) and \(f\) represent time and frequency respectively). \(\fourier{t}{x}(f)\) notation can be used to explicitly indicate that \(x\) is transformed into \(f\) domain. It is easy to see that if \(a\) is a constant, then \(\fourier{t}{ax} = a \fourier{t}{x}\). You can also perform inverse FT on \(X\), which is:
+The domain of \(X(f)\), \(f\), is also in \(\mathbb{R}\). (in my discussion \(t\) and \(f\) represent time and frequency respectively). \(\fourier{t}{x}(f)\) notation can be used to explicitly indicate that \(x\) is transformed into \(f\) domain. It is easy to see that if \(a\) is a constant, then \(\fourier{t}{ax} = a \fourier{t}{x}\). You can also perform inverse FT on \(X\), which is:
 \begin{equation}
 	\begin{aligned}[b]
 		\fourier{f}{X}	&= \ift{f}{X(f)}{t} \\
@@ -177,16 +185,50 @@ Consider a SED function discussed before, \(x = \sed{t}{x}\). The FT of \(x\) is
 	\end{aligned}
 \end{equation}
 
-% 2.4 FT of the sampling function
+% 2.4 Poisson Summation Formula
+\subsection{Poisson Summation Formula}\index{Poisson Summation Formula}
+Consider a function \(x(t)\) and its FT pair \(X(f)\). Then the Poisson Summation formula states that:
+\begin{equation}
+	\begin{aligned}[b]
+		\fsum{n} x(n)	&= \fsum{k} X(k)
+	\end{aligned}
+\end{equation}
+Suppose \(x(n) = e^{2 \pi ian}\). Then we know that the FT of \(x(n)\) is:
+\begin{equation}
+	\begin{aligned}[b]
+		X(k)	&= \fourier{n}{x}(k) \\
+			&= \fourier{n}{e^{2 \pi ian} \times 1}(k) \\
+			&= \fourier{n}{1}(k - a) \\
+			&= \delta (k - a)
+	\end{aligned}
+\end{equation}
+Thus, according to the Poisson Summation formula, it follows that:
+\begin{equation}
+	\begin{aligned}[b]
+		\fsum{n} e^{2 \pi ian}
+			&= \fsum{k} \delta (k - a)
+			\label{eq:poisson}
+	\end{aligned}
+\end{equation}
+
+% 2.5 FT of the sampling function
 \subsection{FT of the sampling function}
 Suppose \(u(t)\) is the sampling function with the sampling interval \(\Delta t\). Then the FT of \(u\) is:
 \begin{equation}
 	\begin{aligned}[b]
-		\fourier{f}{u}
+		\fourier{t}{u}
 			&= \ft{t}{u(t)}{f} \\
 			&= \ft{t}{\spf{t}{n}}{f} \\
 			&= \Delta t \fsum{n} e^{-2\pi ifn\Delta t} \fint \delta (t - n \Delta t) dt \\
 			&= \Delta t \fsum{n} e^{-2\pi ifn\Delta t}
+	\end{aligned}
+\end{equation}
+By applying \eqref{eq:poisson}, we can deduce that:
+\begin{equation}
+	\begin{aligned}[b]
+		\fourier{t}{u}
+			&= \Delta t \fsum{n} e^{-2\pi ifn\Delta t} \\
+			&= \Delta t \fsum{k} \delta (k + f \Delta t)
 	\end{aligned}
 \end{equation}
 
