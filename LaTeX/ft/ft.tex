@@ -11,13 +11,14 @@
 \makeindex
 
 % List of macros
-\newcommand{\fourier}[2]{\mathcal{F}_{#1}[#2]} % Fourier transform notation
 \newcommand{\fint}{\int_{-\infty}^{\infty}} % integral with infinite limits
+\newcommand{\sed}[2]{#2_{0}e^{2\pi if_{0}#1}e^{-#1/T} \theta (#1)} % SED function
+\newcommand{\fsum}[1]{\sum_{#1 = -\infty}^{\infty}} % infinite sum
+\newcommand{\spf}[2]{\Delta #1 \fsum{#2} \delta (#1 - #2 \Delta #1)} % sampling function
+\newcommand{\fourier}[2]{\mathcal{F}_{#1}[#2]} % Fourier transform notation
 \newcommand{\ft}[3]{\fint #2 e^{-2\pi i#3#1} d#1} % Fourier transform 
 \newcommand{\ift}[3]{\fint #2 e^{2\pi i#1#3} d#1} % Inverse Fourier transform 
-\newcommand{\sed}[2]{#2_{0}e^{2\pi if_{0}#1}e^{-#1/T} \theta (#1)} % SED function
-\newcommand{\fsum}[1]{\sum_{#1 = -\infty}^{\infty}}
-\newcommand{\spf}[2]{\Delta #1 \fsum{#2} \delta (#1 - #2 \Delta #1)}
+\newcommand{\conv}[4]{\fint #3(#2)#4(#1 - #2) d#2} % Convolution
 
 % Numbering equation and figure with section number
 \numberwithin{equation}{section}
@@ -67,7 +68,7 @@ Fourier transform is a mathematical transformation, in the context of my exposit
 % First Section: prerequisite mathematics
 \pagenumbering{arabic}
 \section{Prerequisite Mathematics}
-A few prerequisite mathematics will be discussed here first in anticipation of their requirements in the discussion of subsequent sections of Fourier transform. In this article, it is implied that all the functions discussed are generalized functions, \(\mathbb{R} \mapsto \mathbb{C} \) (the domain is either \(t\) or \(f\)), and infinitely differentiable unless stated otherwise.  
+A few prerequisite mathematics will be discussed here first in anticipation of their requirements in the discussion of subsequent sections of Fourier transform. In this article, it is implied that all the functions discussed are generalized functions, \(\mathbb{R} \mapsto \mathbb{C} \) (the domain is either \(t\) or \(f\)), and infinitely differentiable unless stated otherwise. Also, all the definite integrals and infinite sums are assumed to be convergent.  
 
 % 1.1 Dirac Delta Functio
 \subsection{Dirac Delta Function}\index{Dirac Delta function}
@@ -81,8 +82,9 @@ The Dirac Delta function, \(\delta (t)\), has the following property:
 \end{align}
 (In my discussion of function, \(t\) variable represents time physically). It is easy to check that:
 \begin{align}
-	f(a)		&= \fint f(t) \delta (t) dt \text{ and}\\
-	\delta (t)	&= \delta (-t)
+	f(a)		&= \fint f(t) \delta (t) dt\\
+	\delta (t)	&= \delta (-t)\\
+	\delta (at)	&= \frac{\delta (t)}{|a|}
 \end{align}
 Also, the following integral is the Dirac Delta function as well:
 \begin{align}
@@ -120,6 +122,20 @@ The sampling function, denoted as \(u(t)\), with the sampling interval \(\Delta 
 	\end{aligned}
 \end{equation}
 The function is periodic with the period being the sampling interval. 
+
+% 1.4 Convolution
+\subsection{convolution}\index{convolution}
+Convolution is a mathematical operation on two functions (say \(x(t)\) and \(y(t)\)) that outputs another function. The symbol for the operator is \(*\). The definition is as follows:
+\begin{equation}
+	\begin{aligned}[b]
+		x(t)*y(t)
+			&= \conv{t}{\tau}{x}{y}
+			\label{eq:convolution}
+	\end{aligned}
+\end{equation}
+\((x*y)(t)\) notation is also used. Convolution operation is commutative, associative, and distributive.
+
+% 1.5 end of the section
 
 % figure for sed function
 \begin{figure}[H]
@@ -168,9 +184,9 @@ Consider another function, \(e^{2\pi i f_{0} t}x(t)\). The FT of it is:
 			&= X(f - f_{0})
 	\end{aligned}
 \end{equation}
-It is simply the FT of \(x\) in \(f - f_{0}\) in domain.
+It is simply the FT of \(x\) in \(f - f_{0}\) in domain. By the same token, it is easy to see that \(\fourier{t}{x(t - \tau)} = e^{-2\pi i f\tau}X(f)\).
 
-% 2.3 Sinusoidal exponential decay signal \subsubsection{Sinusoidal exponential decay function} Sinusoidal exponential decay (I call it SED) function is as follows:
+% 2.3 Sinusoidal exponential decay signal 
 \subsection{FT of SED}
 Consider a SED function discussed before, \(x = \sed{t}{x}\). The FT of \(x\) is (with \(1/T = r\)) as follows:
 \begin{equation}
@@ -193,7 +209,7 @@ Consider a function \(x(t)\) and its FT pair \(X(f)\). Then the Poisson Summatio
 		\fsum{n} x(n)	&= \fsum{k} X(k)
 	\end{aligned}
 \end{equation}
-Suppose \(x(n) = e^{2 \pi ian}\). Then we know that the FT of \(x(n)\) is:
+For example, if \(x(n) = e^{2 \pi ian}\), then we know that the FT of \(x(n)\) is:
 \begin{equation}
 	\begin{aligned}[b]
 		X(k)	&= \fourier{n}{x}(k) \\
@@ -228,9 +244,47 @@ By applying \eqref{eq:poisson}, we can deduce that:
 	\begin{aligned}[b]
 		\fourier{t}{u}
 			&= \Delta t \fsum{n} e^{-2\pi ifn\Delta t} \\
-			&= \Delta t \fsum{k} \delta (k + f \Delta t)
+			&= \Delta t \fsum{k} \delta (k + f \Delta t)\\
+			&= \fsum{k} \delta (f + \frac{k}{\Delta t})
 	\end{aligned}
 \end{equation}
 
+% 2.6 FT of x multiplied by u
+\subsection{FT of product of u(t) and s(t)}\label{sec:su}
+Consider an arbitrary function \(s(t)\). Let \(x(t) = s(t)u(t)\). The FT of \(x(t)\) is then:
+\begin{equation}
+	\begin{aligned}[b]
+		\fourier{t}{x}
+			&= \ft{t}{s(t)u(t)}{f}\\
+			&= \ft{t}{s(t) \spf{t}{n}}{f}\\
+			&= \fsum{n} s(n \Delta t) e^{-2\pi ifn\Delta t} \Delta t 
+			   \fint \delta (t - n\Delta t) dt\\
+			&= \fsum{n} s(n \Delta t) e^{-2\pi ifn\Delta t} \Delta t 
+			\label{eq:ftsu}
+	\end{aligned}
+\end{equation}
+If \(\Delta t \to 0\), the above infinite sum becomes FT of \(s(t)\). 
+% 2.7 FT of Convolution
+\subsection{FT of Convolution}
+Consider the convolution of two functions \(x(t)*y(t)\). The FT of it is:
+\begin{equation}
+	\begin{aligned}[b]
+		\fourier{t}{(x*y)(t)}
+			&= \ft{t}{(x*y)(t)}{f}\\
+			&= \ft{t}{\left (\conv{t}{\tau}{x}{y} \right )}{f}\\ 
+			&= \fint x(\tau) \left (\fint y(t - \tau) e^{-2\pi ift} dt \right ) d\tau\\
+			&= \fint x(\tau) \left ( e^{-2\pi if\tau}\fourier{f}{Y} \right )d\tau\\ 
+			&= \fourier{f}{Y} \ft{\tau}{x(\tau)}{f}\\
+			&= \fourier{f}{X} \fourier{f}{Y}\\
+			&= X(f)Y(f)
+			\label{eq:ftconv}
+	\end{aligned}
+\end{equation}
+By the same token, \(\fourier{t}{x(t)y(t)} = X(f)*Y(f)\). 
+
+% 2.8 FT of s and u again
+\subsection{FT of \(s(t)u(t)\) again}
+Consider \(x(t) = s(t)u(t)\) discussed in section \ref{sec:su} again. We already showed that the FT of \(x(t)\) is \eqref{eq:ftsu}. We can also see that, by applying \eqref{eq:ftconv}, 
+% 2.9 end of the section 
 \printindex
 \end{document}
