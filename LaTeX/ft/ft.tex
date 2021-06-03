@@ -23,6 +23,7 @@
 % Numbering equation and figure with section number
 \numberwithin{equation}{section}
 \numberwithin{figure}{section}
+\numberwithin{table}{section}
 
 % Centering section titles
 \sectionfont{\centering}
@@ -124,8 +125,9 @@ The sampling function, denoted as \(u(t)\), with the sampling interval \(\Delta 
 The function is periodic with the period being the sampling interval. 
 
 % 1.4 Convolution
-\subsection{convolution}\index{convolution}
+\subsection{Convolution}\index{Convolution}
 Convolution is a mathematical operation on two functions (say \(x(t)\) and \(y(t)\)) that outputs another function. The symbol for the operator is \(*\). The definition is as follows:
+
 \begin{equation}
 	\begin{aligned}[b]
 		x(t)*y(t)
@@ -133,7 +135,31 @@ Convolution is a mathematical operation on two functions (say \(x(t)\) and \(y(t
 			\label{eq:convolution}
 	\end{aligned}
 \end{equation}
-\((x*y)(t)\) notation is also used. Convolution operation is commutative, associative, and distributive.
+\((x*y)(t)\) notation is also used. The table \ref{tab:convolution} lists a few properties of Convolution.
+\begin{table}
+	\centering
+	\caption[optional argument]{Properties of Convolution}
+	\begin{tabular}{|l|l|}
+		\hline
+		Commutativity	& \(x*y = y*x\) \\
+		\hline
+		Associativity	& \(x*(y*z) = (x*y)*z \) \\
+		\hline
+		Distributivity	& \(x*(y + z) = x*y + x*z \) \\
+		\hline
+		Multiplicative identity	& \(x*\delta = x \)\\
+		\hline
+		Complex Conjugation	& \(\overline{x*y} = \overline{x}*\overline{y}\) \\
+		\hline
+		Differentiation	& \((x*y)' = x'*y = x*y' \) \\
+		\hline
+		Integration	& \(\int_{\mathbb{R}}(x*t)(t) dt
+					= \int_{\mathbb{R}} x(t) dt
+					  \int_{\mathbb{R}} y(t) dt\) \\
+		\hline
+	\end{tabular}
+	\label{tab:convolution}
+\end{table}
 
 % 1.5 end of the section
 
