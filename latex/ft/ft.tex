@@ -1,5 +1,6 @@
 \documentclass[letterpaper, 11pt]{article}
 \usepackage[inner = 0.75in, outer = 0.75in, top = 1in, bottom = 1in, bindingoffset = 0.0 cm]{geometry}
+\usepackage[backend=biber]{biblatex}	% bibliography package using biber instead of bibtex
 \usepackage{amsmath}	% provides enhancement of math printout structure 
 \usepackage{amssymb}	% provides an extended symbol collection
 \usepackage{comment}	% package to use comment block
@@ -7,8 +8,16 @@
 \usepackage{fancyhdr}	% to have fancy headers for each page
 \usepackage{graphicx}	% allows you to import images
 \usepackage{float}	% allows the control of float positions
-\usepackage{makeidx} 	% to create index pages
-\makeindex
+\usepackage{imakeidx} 	% to create index pages
+\makeindex[intoc] % creates index and toc
+
+% allows for clickable references, also creates bookmarks that links to the page correctly (pdfview)
+\usepackage[
+	hidelinks, 
+	bookmarksopen=true, 
+	bookmarksnumbered=false, 
+	bookmarksopenlevel=4,
+	pdfview=Fit]{hyperref}
 
 % List of macros
 \newcommand{\fint}{\int_{-\infty}^{\infty}} % integral with infinite limits
@@ -28,8 +37,12 @@
 % Centering section titles
 \sectionfont{\centering}
 
+% Adding bib file
+\addbibresource{ft.bib}
+
 \begin{document}
 % Front cover page with title and name
+\pdfbookmark[0]{Cover}{cover}
 \begin{titlepage}
 	\begin{center}
 		% \vfill must have preceding text line
@@ -55,25 +68,27 @@
 \pagenumbering{roman}
 
 % Preface
+\pdfbookmark[1]{Preface}{preface}
 \section*{\centering Preface}
 Fourier transform is a mathematical transformation, in the context of my exposition, that maps one function in time domain into another function in frequency domain. In order for a function to have its Fourier transform, the function needs to be Schwartz. However, in Physics, we extend the notion of function to more generalized case, called a generalized function. In a generalized function space, we allow more flexibility so that functions like Dirac delta function can have the Fourier transform even though such function is not Schwartz. In this article I will assume that every function that is discussed has its Fourier transform. I will call Fourier transform FT in short, and there are two types of FT: continuous and discrete. Discrete FT is of great importance in many modern data processing application as modern computers are digital, meaning they perform computation in discrete manner. In this article, I'll discuss a continous case first before moving onto the discrete case.
 \cleardoublepage
 
 % Table of Contents
+\pdfbookmark[1]{Table of Contents}{toc}
 \tableofcontents
 \clearpage
 
 % use fancyhdr
 \pagestyle{fancy}
 
-% First Section: prerequisite mathematics
+% 1 First Section: prerequisite mathematics
 \pagenumbering{arabic}
 \section{Prerequisite Mathematics}
 A few prerequisite mathematics will be discussed here first in anticipation of their requirements in the discussion of subsequent sections of Fourier transform. In this article, it is implied that all the functions discussed are generalized functions, \(\mathbb{R} \mapsto \mathbb{C} \) (the domain is either \(t\) or \(f\)), and infinitely differentiable unless stated otherwise. Also, all the definite integrals and infinite sums are assumed to be convergent.  
 
 % 1.1 Dirac Delta Functio
 \subsection{Dirac Delta Function}\index{Dirac Delta function}
-The Dirac Delta function, \(\delta (t)\), has the following property:
+The Dirac Delta function, \(\delta (t)\), has the following properties:
 \begin{align}
 	\delta (t)	&=\begin{cases}
 		\infty, & \text{if } t = 0 \\
@@ -92,7 +107,7 @@ Also, the following integral is the Dirac Delta function as well:
 	\delta (t)	&= \ift{f}{}{t}
 	\label{eq:dirac}
 \end{align}
-The above relations will be used throughout the discussion of this article.
+with the understanding that the Dirac Delta function has meaning only when under an integral sign \cite{arfken}. The above relations will be used throughout the discussion of this article.
 
 % 1.2 Sinusoidal expoential decay function
 \subsection{Sinusoidal exponential decay function}\index{SED}
@@ -127,7 +142,6 @@ The function is periodic with the period being the sampling interval.
 % 1.4 Convolution
 \subsection{Convolution}\index{Convolution}
 Convolution is a mathematical operation on two functions (say \(x(t)\) and \(y(t)\)) that outputs another function. The symbol for the operator is \(*\). The definition is as follows:
-
 \begin{equation}
 	\begin{aligned}[b]
 		x(t)*y(t)
@@ -135,7 +149,7 @@ Convolution is a mathematical operation on two functions (say \(x(t)\) and \(y(t
 			\label{eq:convolution}
 	\end{aligned}
 \end{equation}
-\((x*y)(t)\) notation is also used. The table \ref{tab:convolution} lists a few properties of Convolution.
+\((x*y)(t)\) notation is also used. The term \emph{convolution} refers to both the result function and to the process of computing it. The table \ref{tab:convolution} lists a few properties of Convolution \cite{arfken}.
 \begin{table}
 	\centering
 	\caption[optional argument]{Properties of Convolution}
@@ -160,7 +174,6 @@ Convolution is a mathematical operation on two functions (say \(x(t)\) and \(y(t
 	\end{tabular}
 	\label{tab:convolution}
 \end{table}
-
 % 1.5 end of the section
 
 % figure for sed function
@@ -170,7 +183,6 @@ Convolution is a mathematical operation on two functions (say \(x(t)\) and \(y(t
 	\caption{sed function plot, s vs. t}
 	\label{fig1}
 \end{figure}
-
 
 % Second Section: Continuou Fourier transform
 \clearpage
@@ -196,7 +208,7 @@ The domain of \(X(f)\), \(f\), is also in \(\mathbb{R}\). (in my discussion \(t\
 				&= x(t)
 	\end{aligned}
 \end{equation}
-where I used \eqref{eq:dirac} orthogonality relation (We will continue to use the notation \(x(t)\) and \(X(f)\) as an example of FT pair throughout the discussion). It is also easy to see that the inverse FT of one is the Dirac Delta function.
+where I used \eqref{eq:dirac} orthogonality relation .We will continue to use the notation \(x(t)\) and \(X(f)\) as an example of FT pair throughout the discussion (they are called 'Fourier pair'). It is also easy to see that the inverse FT of one is the Dirac Delta function \cite{james}.
 
 % 2.2 FT with the extra phase factor
 \subsection{FT with the extra phase factor}
@@ -229,7 +241,7 @@ Consider a SED function discussed before, \(x = \sed{t}{x}\). The FT of \(x\) is
 
 % 2.4 Poisson Summation Formula
 \subsection{Poisson Summation Formula}\index{Poisson Summation Formula}
-Consider a function \(x(t)\) and its FT pair \(X(f)\). Then the Poisson Summation formula states that:
+Consider a Fourier pair \(x(t)\) and \(X(f)\). Then the Poisson Summation formula states that \cite{stein}:
 \begin{equation}
 	\begin{aligned}[b]
 		\fsum{n} x(n)	&= \fsum{k} X(k)
@@ -276,7 +288,7 @@ By applying \eqref{eq:poisson}, we can deduce that:
 \end{equation}
 
 % 2.6 FT of x multiplied by u
-\subsection{FT of product of u(t) and s(t)}\label{sec:su}
+\subsection{FT of product of \(u(t)\) and \(s(t)\)}\label{sec:su}
 Consider an arbitrary function \(s(t)\). Let \(x(t) = s(t)u(t)\). The FT of \(x(t)\) is then:
 \begin{equation}
 	\begin{aligned}[b]
@@ -290,6 +302,7 @@ Consider an arbitrary function \(s(t)\). Let \(x(t) = s(t)u(t)\). The FT of \(x(
 	\end{aligned}
 \end{equation}
 If \(\Delta t \to 0\), the above infinite sum becomes FT of \(s(t)\). 
+
 % 2.7 FT of Convolution
 \subsection{FT of Convolution}
 Consider the convolution of two functions \(x(t)*y(t)\). The FT of it is:
@@ -303,14 +316,32 @@ Consider the convolution of two functions \(x(t)*y(t)\). The FT of it is:
 			&= \fourier{f}{Y} \ft{\tau}{x(\tau)}{f}\\
 			&= \fourier{f}{X} \fourier{f}{Y}\\
 			&= X(f)Y(f)
+	\end{aligned}
+\end{equation}
+by the same token,
+\begin{equation}
+	\begin{aligned}[b]
+		\fourier{t}{x(t)y(t)}
+			&= X(f)*Y(f)
 			\label{eq:ftconv}
 	\end{aligned}
 \end{equation}
-By the same token, \(\fourier{t}{x(t)y(t)} = X(f)*Y(f)\). 
+Here you can see convolutions can be used to make FT easier \cite{james}.
 
 % 2.8 FT of s and u again
 \subsection{FT of \(s(t)u(t)\) again}
 Consider \(x(t) = s(t)u(t)\) discussed in section \ref{sec:su} again. We already showed that the FT of \(x(t)\) is \eqref{eq:ftsu}. We can also see that, by applying \eqref{eq:ftconv}, 
+\begin{equation}
+	\begin{aligned}[b]
+		\fourier{t}{su}
+		&= S(f)*U(f)
+	\end{aligned}
+\end{equation}
+
 % 2.9 end of the section 
+\clearpage
+\pagestyle{plain}
+\printbibliography
+\addcontentsline{toc}{section}{References}
 \printindex
 \end{document}
