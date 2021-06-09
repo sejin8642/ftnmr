@@ -139,7 +139,7 @@ The real part of \eqref{eq:sed} is simply \eqref{eq:rsed}.
 
 % 1.3 Sampling function  
 \subsection{Sampling function}\index{Sampling function}
-The sampling function, denoted as \(u(t)\), with the sampling interval \(\Delta t\) is as follows:
+The sampling function, denoted as \(u(t)\), with the \emph{sampling interval} \(\Delta t\) is as follows:
 \begin{equation}
 	\begin{aligned}[b]
 		u(t) = \spf{t}{n}
@@ -291,9 +291,10 @@ By applying \eqref{eq:poisson}, we can deduce that:
 		\fourier{t}{u}
 			&= \Delta t \fsum{n} e^{-2\pi ifn\Delta t} \\
 			&= \Delta t \fsum{k} \delta (k + f \Delta t)\\
-			&= \fsum{k} \delta (f + \frac{k}{\Delta t})
+			&= \fsum{k} \delta (f + kf_{s})
 	\end{aligned}
 \end{equation}
+Where \(f_{s} = 1/\Delta t\) which is called a \emph{sampling rate}.
 
 % 2.6 FT of x multiplied by u
 \subsection{FT of product of \(u(t)\) and \(s(t)\)}\label{sec:su}
@@ -342,7 +343,12 @@ Consider \(x(t) = s(t)u(t)\) discussed in section \ref{sec:su} again. We already
 \begin{equation}
 	\begin{aligned}[b]
 		\fourier{t}{su}
-		&= S(f)*U(f)
+		&= S(f)*U(f)\\
+		&= \conv{f}{\xi}{S}{U}\\
+		&= \fint S(\xi) 
+		   \left (\fsum{k} \delta (f + kf_{s}- \xi) \right ) d\xi\\
+		&= \fsum{k} S(f + kf_{s}) \fint \delta (f + kf_{s} - \xi) d\xi\\
+		&= \fsum{k} S(f + kf_{s}) 
 	\end{aligned}
 \end{equation}
 
