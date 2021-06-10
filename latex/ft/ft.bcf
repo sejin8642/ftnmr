@@ -2185,8 +2185,9 @@
     <bcf:citekey order="1">arfken</bcf:citekey>
     <bcf:citekey order="2">arfken</bcf:citekey>
     <bcf:citekey order="3">james</bcf:citekey>
-    <bcf:citekey order="4">stein</bcf:citekey>
-    <bcf:citekey order="5">james</bcf:citekey>
+    <bcf:citekey order="4">arfken</bcf:citekey>
+    <bcf:citekey order="5">stein</bcf:citekey>
+    <bcf:citekey order="6">james</bcf:citekey>
   </bcf:section>
   <!-- SORTING TEMPLATES -->
   <bcf:sortingtemplate name="nty">

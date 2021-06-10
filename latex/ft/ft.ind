@@ -8,15 +8,21 @@
 
   \indexspace
 
-  \item Fourier transform, \hyperpage{4}
+  \item Fourier transform, \hyperpage{5}
 
   \indexspace
 
-  \item Poisson Summation Formula, \hyperpage{5}
+  \item Kronecker delta, \hyperpage{2}
+
+  \indexspace
+
+  \item Poisson Summation Formula, \hyperpage{6}
 
   \indexspace
 
   \item Sampling function, \hyperpage{2}
+  \item Sampling interval, \hyperpage{2}
+  \item Sampling rate, \hyperpage{7}
   \item SED, \hyperpage{1}
 
 \end{theindex}

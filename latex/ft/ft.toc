@@ -10,24 +10,30 @@
 \defcounter {refsection}{0}\relax 
 \contentsline {subsection}{\numberline {1.4}Convolution}{2}{subsection.1.4}%
 \defcounter {refsection}{0}\relax 
-\contentsline {section}{\numberline {2}Continuous Fourier Transform}{4}{section.2}%
+\contentsline {subsection}{\numberline {1.5}Kronecker delta}{2}{subsection.1.5}%
 \defcounter {refsection}{0}\relax 
-\contentsline {subsection}{\numberline {2.1}Definition of Fourier transform}{4}{subsection.2.1}%
+\contentsline {section}{\numberline {2}Continuous Fourier Transform}{5}{section.2}%
 \defcounter {refsection}{0}\relax 
-\contentsline {subsection}{\numberline {2.2}FT with the extra phase factor}{4}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.1}Definition of Fourier transform}{5}{subsection.2.1}%
 \defcounter {refsection}{0}\relax 
-\contentsline {subsection}{\numberline {2.3}FT of SED}{5}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.2}FT with the extra phase factor}{5}{subsection.2.2}%
 \defcounter {refsection}{0}\relax 
-\contentsline {subsection}{\numberline {2.4}Poisson Summation Formula}{5}{subsection.2.4}%
+\contentsline {subsection}{\numberline {2.3}Poisson Summation Formula}{6}{subsection.2.3}%
 \defcounter {refsection}{0}\relax 
-\contentsline {subsection}{\numberline {2.5}FT of the sampling function}{5}{subsection.2.5}%
+\contentsline {subsection}{\numberline {2.4}FT of the sampling function}{6}{subsection.2.4}%
 \defcounter {refsection}{0}\relax 
-\contentsline {subsection}{\numberline {2.6}FT of product of \(u(t)\) and \(s(t)\)}{6}{subsection.2.6}%
+\contentsline {subsection}{\numberline {2.5}FT of product of \(u(t)\) and \(s(t)\)}{7}{subsection.2.5}%
 \defcounter {refsection}{0}\relax 
-\contentsline {subsection}{\numberline {2.7}FT of Convolution}{6}{subsection.2.7}%
+\contentsline {subsection}{\numberline {2.6}FT of Convolution}{7}{subsection.2.6}%
 \defcounter {refsection}{0}\relax 
-\contentsline {subsection}{\numberline {2.8}FT of \(s(t)u(t)\) again}{7}{subsection.2.8}%
+\contentsline {subsection}{\numberline {2.7}FT of \(s(t)u(t)\) again}{8}{subsection.2.7}%
 \defcounter {refsection}{0}\relax 
-\contentsline {section}{References}{8}{section*.3}%
+\contentsline {subsection}{\numberline {2.8}FT of SED}{8}{subsection.2.8}%
 \defcounter {refsection}{0}\relax 
-\contentsline {section}{Index}{9}{section*.4}%
+\contentsline {section}{\numberline {3}Discrete Fourier transform}{9}{section.3}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {3.1}Definition of DFT}{9}{subsection.3.1}%
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{References}{10}{section*.3}%
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{Index}{11}{section*.4}%
