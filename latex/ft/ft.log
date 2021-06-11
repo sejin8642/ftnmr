@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2020.8.30)  9 JUN 2021 17:25
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2020.8.30)  11 JUN 2021 09:06
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -768,8 +768,8 @@ pdfTeX warning (ext4): destination with the same identifier (name{page.1}) has
 been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.157 \subsection
-                 {Convolution}\index{Convolution} [1
+l.185 \end{equation}
+                     [1
 
 ] [2]
 Package epstopdf Info: Source file: <sed.eps>
@@ -780,71 +780,71 @@ Package epstopdf Info: Source file: <sed.eps>
 (epstopdf)                    size: 6125 bytes
 (epstopdf)             Command: <repstopdf --outfile=sed-eps-converted-to.pdf s
 ed.eps>
-(epstopdf)             \includegraphics on input line 254.
+(epstopdf)             \includegraphics on input line 255.
 Package epstopdf Info: Output file is already uptodate.
 <sed-eps-converted-to.pdf, id=169, 433.62pt x 289.08pt>
 File: sed-eps-converted-to.pdf Graphic file (type pdf)
 <use sed-eps-converted-to.pdf>
-Package pdftex.def Info: sed-eps-converted-to.pdf  used on input line 254.
+Package pdftex.def Info: sed-eps-converted-to.pdf  used on input line 255.
 (pdftex.def)             Requested size: 542.05014pt x 361.34999pt.
 
-Overfull \hbox (36.16014pt too wide) in paragraph at lines 254--255
+Overfull \hbox (36.16014pt too wide) in paragraph at lines 255--256
  [][] 
  []
 
-[3] [4 <./sed-eps-converted-to.pdf>] [5
+[3 <./sed-eps-converted-to.pdf>] [4
 
-] [6]
-
-Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 373.
-
+] [5]
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 373.
+(hyperref)                removing `math shift' on input line 374.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 414.
+(hyperref)                removing `math shift' on input line 374.
 
-[7]
-Overfull \hbox (19.1687pt too wide) in paragraph at lines 437--438
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `math shift' on input line 415.
+
+[6]
+Overfull \hbox (19.1687pt too wide) in paragraph at lines 438--439
 \OT1/cmr/m/n/10.95 We will now con-sider a spe-cific func-tion, in this case, S
 ED func-tion dis-cussed in sec-tion 1, $\OML/cmm/m/it/10.95 x \OT1/cmr/m/n/10.9
 5 = \OML/cmm/m/it/10.95 x[]e[]e[]^^R\OT1/cmr/m/n/10.95 (\OML/cmm/m/it/10.95 t\O
 T1/cmr/m/n/10.95 )$.
  []
 
-[8] [9
+[7] [8
 
-] [10
+] [9
 
 ]
 runsystem(makeindex ft.idx)...executed safely (allowed).
 
  (./ft.ind)
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 484.
- [11
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 486.
+ [10
 
 ]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 484.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 486.
  (./ft.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 484.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 484.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 486.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 486.
 Package rerunfilecheck Info: File `ft.out' has not changed.
-(rerunfilecheck)             Checksum: 843773B7093E3CA488BAA7656884FC24;1438.
+(rerunfilecheck)             Checksum: CD7CDBC1CB306A654094F51FF333932F;1438.
 Package logreq Info: Writing requests to 'ft.run.xml'.
 \openout1 = `ft.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 14558 strings out of 481239
- 245521 string characters out of 5920377
- 903121 words of memory out of 5000000
+ 14557 strings out of 481239
+ 245514 string characters out of 5920377
+ 903123 words of memory out of 5000000
  29539 multiletter control sequences out of 15000+600000
  541357 words of font info for 57 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 38i,16n,46p,1001b,1133s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 38i,16n,46p,1076b,1133s stack positions out of 5000i,500n,10000p,200000b,80000s
 </usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></us
 r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/shar
 e/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmcsc10.pfb></usr/share/tex
@@ -861,10 +861,10 @@ cmr8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pfb
 /texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/share/texliv
 e/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/share/texlive/texm
 f-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on ft.pdf (14 pages, 215085 bytes).
+Output written on ft.pdf (13 pages, 215999 bytes).
 PDF statistics:
- 333 PDF objects out of 1000 (max. 8388607)
- 296 compressed objects within 3 object streams
- 78 named destinations out of 1000 (max. 500000)
+ 330 PDF objects out of 1000 (max. 8388607)
+ 294 compressed objects within 3 object streams
+ 77 named destinations out of 1000 (max. 500000)
  182 words of extra memory for PDF output out of 10000 (max. 10000000)
 

@@ -1,6 +1,6 @@
 \begin{theindex}
 
-  \item Convolution, \hyperpage{2}
+  \item Convolution, \hyperpage{1}
 
   \indexspace
 
@@ -8,7 +8,7 @@
 
   \indexspace
 
-  \item Fourier transform, \hyperpage{5}
+  \item Fourier transform, \hyperpage{4}
 
   \indexspace
 
@@ -16,13 +16,13 @@
 
   \indexspace
 
-  \item Poisson Summation Formula, \hyperpage{6}
+  \item Poisson Summation Formula, \hyperpage{5}
 
   \indexspace
 
-  \item Sampling function, \hyperpage{2}
-  \item Sampling interval, \hyperpage{2}
-  \item Sampling rate, \hyperpage{7}
-  \item SED, \hyperpage{1}
+  \item Sampling function, \hyperpage{1}
+  \item Sampling interval, \hyperpage{1}
+  \item Sampling rate, \hyperpage{6}
+  \item SED, \hyperpage{3}
 
 \end{theindex}

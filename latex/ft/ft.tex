@@ -84,7 +84,7 @@
 % Preface
 \pdfbookmark[1]{Preface}{preface}
 \section*{\centering Preface}
-Fourier transform is a mathematical transformation, in the context of my exposition, that maps one function in time domain into another function in frequency domain. In order for a function to have its Fourier transform, the function needs to be Schwartz. However, in Physics, we extend the notion of function to more generalized case, called a generalized function. In a generalized function space, we allow more flexibility so that functions like Dirac delta function can have the Fourier transform even though such function is not Schwartz. In this article I will assume that every function that is discussed has its Fourier transform. I will call Fourier transform FT in short, and there are two types of FT: continuous and discrete. Discrete FT is of great importance in many modern data processing application as modern computers are digital, meaning they perform computation in discrete manner. In this article, I'll discuss a continous case first before moving onto the discrete case.
+Fourier transform is a mathematical transformation, in the context of my exposition, that maps one function in time domain into another function in frequency domain. In order for a function to have its Fourier transform, the function needs to be Schwartz. However, in Physics, we extend the notion of function to a more generalized case, called a generalized function. In a generalized function space, we allow more flexibility so that functions like Dirac delta function can have the Fourier transform even though such function is not Riemann integrable. In this article I will assume that every function that is discussed has its Fourier transform. I will call Fourier transform FT in short, and there are two types of FT: continuous and discrete. Discrete FT is of great importance in many modern data processing application as data can only be recorded in discrete and finite amount. Also, modern computers are digital, meaning they perform computation in discrete manner. In this article, I'll discuss a continous case first before moving onto the discrete case.
 \cleardoublepage
 
 % Table of Contents
@@ -123,27 +123,8 @@ Also, the following integral is the Dirac Delta function as well:
 \end{align}
 with the understanding that the Dirac Delta function has meaning only when under an integral sign \cite{arfken}. The above relations will be used throughout the discussion of this article.
 
-% 1.2 Sinusoidal expoential decay function
-\subsection{Sinusoidal exponential decay function}\index{SED}
-Sinusoidal exponential decay function (I call it SED) is as follows:
-\begin{equation}
-	\begin{aligned}[b]
-		x &= x_{0}\cos{(2\pi f_{0}t)}e^{-t/T} \theta(t)
-		\label{eq:rsed}
-	\end{aligned}
-\end{equation}
-Where \(\theta (t)\) is a Heaviside step function (the plot of such function is given in figure \ref{fig1}). You can have sine instead of cosine in the above expression. For our discussion, SED of choice is combination of sine and cosine exponential decays in complex form:
-\begin{equation}
-	\begin{aligned}[b]
-		x	&= x_{0}\cos{(2\pi f_{0}t)}e^{-t/T} \theta(t)+ i x_{0}\sin{(2\pi f_{0}t)}e^{-t/T} \theta(t)\\
-			&= (\cos{(2\pi f_{0}t)} +i \sin{(2\pi f_{0}t)})x_{0}e^{-t/T} \theta(t) \\
-			&= \sed{t}{x}
-			\label{eq:sed}
-	\end{aligned}
-\end{equation}
-The real part of \eqref{eq:sed} is simply \eqref{eq:rsed}.
 
-% 1.3 Sampling function  
+% 1.2 Sampling function  
 \subsection{Sampling function}\index{Sampling function}
 The sampling function, denoted as \(u(t)\), with the \emph{sampling interval} \(\Delta t\) \index{Sampling interval} is as follows:
 \begin{equation}
@@ -153,7 +134,7 @@ The sampling function, denoted as \(u(t)\), with the \emph{sampling interval} \(
 \end{equation}
 The function is periodic with the period being the sampling interval. 
 
-% 1.4 Convolution
+% 1.3 Convolution
 \subsection{Convolution}\index{Convolution}
 Convolution is a mathematical operation on two functions (say \(x(t)\) and \(y(t)\)) that outputs another function. The symbol for the operator is \(*\). The definition is as follows:
 \begin{equation}
@@ -191,7 +172,7 @@ Convolution is a mathematical operation on two functions (say \(x(t)\) and \(y(t
 	\label{tab:convolution}
 \end{table}
 
-% 1.5 Kronecker delta
+% 1.4 Kronecker delta
 \subsection{Kronecker delta}\index{Kronecker delta}
 Suppose \(i\) and \(j\) are integers. Then a Kronecker delta is defined as:
 \begin{equation}
@@ -245,6 +226,26 @@ Thus, the above sum satisfies the Kronecker delta condition. In other words,
 				\label{eq:kronecker}
 	\end{aligned}
 \end{equation}
+
+% 1.5 Sinusoidal expoential decay function
+\subsection{Sinusoidal exponential decay function}\index{SED}
+Sinusoidal exponential decay function (I call it SED) is as follows:
+\begin{equation}
+	\begin{aligned}[b]
+		x &= x_{0}\cos{(2\pi f_{0}t)}e^{-t/T} \theta(t)
+		\label{eq:rsed}
+	\end{aligned}
+\end{equation}
+Where \(\theta (t)\) is a Heaviside step function (the plot of such function is given in figure \ref{fig1}). You can have sine instead of cosine in the above expression. For our discussion, SED of choice is combination of sine and cosine exponential decays in complex form:
+\begin{equation}
+	\begin{aligned}[b]
+		x	&= x_{0}\cos{(2\pi f_{0}t)}e^{-t/T} \theta(t)+ i x_{0}\sin{(2\pi f_{0}t)}e^{-t/T} \theta(t)\\
+			&= (\cos{(2\pi f_{0}t)} +i \sin{(2\pi f_{0}t)})x_{0}e^{-t/T} \theta(t) \\
+			&= \sed{t}{x}
+			\label{eq:sed}
+	\end{aligned}
+\end{equation}
+The real part of \eqref{eq:sed} is simply \eqref{eq:rsed}.
 
 % 1.6 End of the section
 
@@ -474,7 +475,8 @@ The inverse DFT of \(X_{k}\) is:
 			&= x_{n}
 	\end{aligned}
 \end{equation}
-Where I used the orthogonal relation \eqref{eq:kronecker}.
+Where I used the orthogonal relation \eqref{eq:kronecker}. There is another version of DFT called discrete-time Fourier transform (DTFT in short). The only difference is that the sum runs from negative infinity to positive infinity. The example is \eqref{eq:ftsu}, which is DTFT of \(\Delta t\cdot s(n\Delta t)\). 
+
 % Bibliography and index
 \clearpage
 \pagestyle{plain}

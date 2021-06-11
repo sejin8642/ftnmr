@@ -3,10 +3,10 @@
 \BOOKMARK [1][]{toc.1}{Table of Contents}{cover.0}% 3
 \BOOKMARK [1][]{section.1}{Prerequisite Mathematics}{cover.0}% 4
 \BOOKMARK [2][]{subsection.1.1}{Dirac Delta Function}{section.1}% 5
-\BOOKMARK [2][]{subsection.1.2}{Sinusoidal exponential decay function}{section.1}% 6
-\BOOKMARK [2][]{subsection.1.3}{Sampling function}{section.1}% 7
-\BOOKMARK [2][]{subsection.1.4}{Convolution}{section.1}% 8
-\BOOKMARK [2][]{subsection.1.5}{Kronecker delta}{section.1}% 9
+\BOOKMARK [2][]{subsection.1.2}{Sampling function}{section.1}% 6
+\BOOKMARK [2][]{subsection.1.3}{Convolution}{section.1}% 7
+\BOOKMARK [2][]{subsection.1.4}{Kronecker delta}{section.1}% 8
+\BOOKMARK [2][]{subsection.1.5}{Sinusoidal exponential decay function}{section.1}% 9
 \BOOKMARK [1][]{section.2}{Continuous Fourier Transform}{cover.0}% 10
 \BOOKMARK [2][]{subsection.2.1}{Definition of Fourier transform}{section.2}% 11
 \BOOKMARK [2][]{subsection.2.2}{FT with the extra phase factor}{section.2}% 12
