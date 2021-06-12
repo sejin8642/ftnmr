@@ -236,7 +236,7 @@ Sinusoidal exponential decay function (I call it SED) is as follows:
 		\label{eq:rsed}
 	\end{aligned}
 \end{equation}
-Where \(\theta (t)\) is a Heaviside step function (the plot of such function is given in figure \ref{fig1}). You can have sine instead of cosine in the above expression. For our discussion, SED of choice is combination of sine and cosine exponential decays in complex form:
+where \(\theta (t)\) is a heaviside step function (SED function plot is given in figure \ref{fig1}). you can have sine instead of cosine in the above expression. for our discussion, sed of choice is combination of sine and cosine exponential decays in complex form:
 \begin{equation}
 	\begin{aligned}[b]
 		x	&= x_{0}\cos{(2\pi f_{0}t)}e^{-t/T} \theta(t)+ i x_{0}\sin{(2\pi f_{0}t)}e^{-t/T} \theta(t)\\
@@ -456,7 +456,7 @@ We will now consider a specific function, in this case, SED function discussed i
 Unlike continuous FT, discrete FT, or DFT in short, converts a finite sequence \(\{x_{n}\}_{n=0}^{N-1} \), instead of continuous function, into an element of another finite sequence \( \{X_{n}\}_{n=0}^{N-1} \). As you can see from the above sequences, there are \(N\) elements of both \(x\) and \(X\) respectively. From now on it is implied that all the sequences without explicit subscripts and superscripts run from \(n=0\) to \(n=N-1\).   
 
 % 3.1 Definition of DFT
-\subsection{Definition of DFT}
+\subsection{Definition of DFT}\index{discrete Fourier transfomr}
 Consider a sequence \(\{x_{n}\}\). Then DFT of \(x_{n}\) is:
 \begin{equation}
 	\begin{aligned}[b]
@@ -475,7 +475,7 @@ The inverse DFT of \(X_{k}\) is:
 			&= x_{n}
 	\end{aligned}
 \end{equation}
-Where I used the orthogonal relation \eqref{eq:kronecker}. There is another version of DFT called discrete-time Fourier transform (DTFT in short). The only difference is that the sum runs from negative infinity to positive infinity. The example is \eqref{eq:ftsu}, which is DTFT of \(\Delta t\cdot s(n\Delta t)\). 
+Where I used the orthogonal relation \eqref{eq:kronecker}\cite{james}. There is another version of DFT called discrete-time Fourier transform (DTFT in short)\index{discrete-time Fourier transform}. The only difference is that the sum runs from negative infinity to positive infinity with a continuous domain (the example is \eqref{eq:ftsu}, which is DTFT of \(\Delta t\cdot s(n\Delta t)\) whose element of the domain is \(2\pi f\Delta t \)). 
 
 % Bibliography and index
 \clearpage
