@@ -76,13 +76,18 @@ class fid():
         -------
         w: float
             Signal frequency
+
+        Raises
+        ------
+        ValueError
+            If incorrect timeunit is specified (it is either msec or micron).
         """
         if self.timeunit == 'msec':
             return pow(10, -9)*self.shift*self.ref_w
         elif self.timeunit == 'micron':
             return pow(10, -12)*self.shift*self.ref_w
         else:
-            raise Exception('Incorrect time unit is specified: use msec or micron')
+            raise ValueError('Incorrect time unit is specified: use msec or micron')
 
     def __time__(self, nsp):
         """
