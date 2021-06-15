@@ -22,6 +22,8 @@ class fid():
         Chemical shift
     T2: float
         Transverse relaxation time
+    nsp: inte
+        Number of samples in one period
     gamma: float
         Gyromagnetic ratio
     ref_w: float
@@ -46,27 +48,16 @@ class fid():
         """ 
         Constructor
 
-        Parameters
-        ----------
-        B: float
-            External magnetic field
-        timeunit: str
-            Unit for time variable, t
-        shift: float
-            Chemical shift
-        T2: float
-            Transverse relaxation time
-        nsp: int
-            Number of samples in one period
         """
         self.B = B # Approximately 2000 msec is T2 for water/CSF at 1.5T
         self.timeunit = timeunit
         self.shift = shift
         self.T2 = T2
+        self.nsp = nsp
         self.gamma = 267.52218744*pow(10,6)
         self.ref_w = self.B*self.gamma
         self.w = self.__sfrq__()
-        self.t, self.SR = self.__time__(nsp)
+        self.t, self.SR = self.__time__()
 
     def __sfrq__(self):
         """
@@ -89,14 +80,9 @@ class fid():
         else:
             raise ValueError('Incorrect time unit is specified: use msec or micron')
 
-    def __time__(self, nsp):
+    def __time__(self):
         """
         A list of times at which the signal is sampled
-
-        Parameter
-        ---------
-        nsp: int
-            A number of samples in one period
 
         Returns
         -------
@@ -106,7 +92,7 @@ class fid():
         if self.shift == 0: # 103 samples total when there is no oscillation
             return np.linspace(0, 6*self.T2, 6*17 + 1), 17/self.T2
         else:
-            SR = 0.5*nsp*self.w/np.pi
+            SR = 0.5*self.nsp*self.w/np.pi
             ns = int(6*self.T2*SR) + 1 # total number of samples including t = 0 
             return np.linspace(0, (ns - 1)/SR, ns), SR
 
