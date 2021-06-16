@@ -22,8 +22,10 @@ class fid():
         Chemical shift
     T2: float
         Transverse relaxation time
-    nsp: inte
+    nsp: int
         Number of samples in one period
+    total_t: float
+        The sampling duration
     gamma: float
         Gyromagnetic ratio
     ref_w: float
@@ -33,18 +35,29 @@ class fid():
         It is an observed frequency minus the reference frequency)
     t: list[float]
         A list of times at which the signal is sampled (~6*T2)
+    signal: list[float]
+        FID signal
 
     Methods
     -------
     sftq()
         Returns an adjusted signal frequency
-    time(nsp=40)
+    time()
         Returns a list of sampling times and sampling rate SR
+    sgnl()
+        Returns FID signal
     call()
         Returns the sampled FID signal
 
     """
-    def __init__(self, B=1.5, timeunit='msec', shift=0, T2=2000, nsp=40):
+    def __init__(
+            self,
+            B=1.5,
+            timeunit='msec',
+            shift=0,
+            T2=2000,
+            nsp=40,
+            total_t=12000):
         """ 
         Constructor
 
@@ -54,10 +67,12 @@ class fid():
         self.shift = shift
         self.T2 = T2
         self.nsp = nsp
+        self.total_t = total_t
         self.gamma = 267.52218744*pow(10,6)
         self.ref_w = self.B*self.gamma
         self.w = self.__sfrq__()
         self.t, self.SR = self.__time__()
+        self.signal = self.__sgnl__()
 
     def __sfrq__(self):
         """
@@ -89,14 +104,14 @@ class fid():
         t: list[float]
             Sampled times
         """
-        if self.shift == 0: # 103 samples total when there is no oscillation
-            return np.linspace(0, 6*self.T2, 6*17 + 1), 17/self.T2
+        if self.shift == 0: # 1001 samples total when there is no oscillation
+            return np.linspace(0, self.total_t, 1001), 1000/self.total_t 
         else:
             SR = 0.5*self.nsp*self.w/np.pi
-            ns = int(6*self.T2*SR) + 1 # total number of samples including t = 0 
+            ns = int(self.total_t*SR) + 1 # total number of samples including t = 0 
             return np.linspace(0, (ns - 1)/SR, ns), SR
 
-    def __call__(self):
+    def __sgnl__(self):
         """
         Sampled FID signal
 
@@ -106,3 +121,7 @@ class fid():
             FID signal
         """
         return np.exp(-self.t/self.T2)*(np.cos(self.w*self.t) + 1j*np.sin(self.w*self.t))
+
+    def __call__(self):
+        """ returns signal """ 
+        return self.signal
