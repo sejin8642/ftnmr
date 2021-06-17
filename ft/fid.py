@@ -70,11 +70,11 @@ class fid():
         self.total_t = total_t
         self.gamma = 267.52218744*pow(10,6)
         self.ref_w = self.B*self.gamma
-        self.w = self.__sfrq__()
-        self.t, self.SR = self.__time__()
-        self.signal = self.__sgnl__()
+        self.w = self.sfrq()
+        self.t, self.dt, self.SR = self.time()
+        self.signal = self.sgnl()
 
-    def __sfrq__(self):
+    def sfrq(self):
         """
         Signal frequency adjusted according to chemical shift
 
@@ -95,23 +95,28 @@ class fid():
         else:
             raise ValueError('Incorrect time unit is specified: use msec or micron')
 
-    def __time__(self):
+    def time(self):
         """
-        A list of times at which the signal is sampled
+        A list of times at which the signal is sampled with sampling interval and rate.
 
         Returns
         -------
         t: list[float]
             Sampled times
+        dt: float
+            Sampling interval, also called timestep
+        SR: float
+            Sampling rate
         """
         if self.shift == 0: # 1001 samples total when there is no oscillation
-            return np.linspace(0, self.total_t, 1001), 1000/self.total_t 
+            dt = self.total_t/1000
+            return np.linspace(0, self.total_t, 1001), dt, 1/dt
         else:
             SR = 0.5*self.nsp*self.w/np.pi
             ns = int(self.total_t*SR) + 1 # total number of samples including t = 0 
-            return np.linspace(0, (ns - 1)/SR, ns), SR
+            return np.linspace(0, (ns - 1)/SR, ns), 1/SR, SR
 
-    def __sgnl__(self):
+    def sgnl(self):
         """
         Sampled FID signal
 
