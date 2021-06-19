@@ -24,17 +24,19 @@ class fid():
         Transverse relaxation time
     nsp: int
         Number of samples in one period
-    total_t: float
+    t_cut: float
         The sampling duration
     gamma: float
         Gyromagnetic ratio
-    w_ref: float
-        Reference angular frequency (lowest frequency)
     w: float
         Adjusted signal frequency according to chemical shift
-        It is an observed frequency minus the reference frequency)
+        (It is an observed frequency minus the reference frequency)
     t: list[float]
         A list of times at which the signal is sampled (~6*T2)
+    dt: float
+        Sampling interval, also called timestep
+    f_s: float
+        Sampling frequency
     signal: list[float]
         FID signal
 
@@ -43,7 +45,7 @@ class fid():
     sftq()
         Returns an adjusted signal frequency
     time()
-        Returns a list of sampling times and sampling rate SR
+        Returns a list of sampling times and sampling rate f_s
     sgnl()
         Returns FID signal
     call()
@@ -57,7 +59,7 @@ class fid():
             shift=0,
             T2=2000,
             nsp=40,
-            total_t=12000):
+            t_cut=12000):
         """ 
         Constructor
 
@@ -67,11 +69,10 @@ class fid():
         self.shift = shift
         self.T2 = T2
         self.nsp = nsp
-        self.total_t = total_t
+        self.t_cut = t_cut
         self.gamma = 267.52218744*pow(10,6)
-        self.w_ref = self.B*self.gamma
         self.w = self.sfrq()
-        self.t, self.dt, self.SR = self.time()
+        self.t, self.dt, self.f_s = self.time()
         self.signal = self.sgnl()
 
     def sfrq(self):
@@ -89,9 +90,9 @@ class fid():
             If incorrect timeunit is specified (it is either msec or micron).
         """
         if self.timeunit == 'msec':
-            return pow(10, -9)*self.shift*self.w_ref
+            return pow(10, -9)*self.shift*self.B*self.gamma
         elif self.timeunit == 'micron':
-            return pow(10, -12)*self.shift*self.w_ref
+            return pow(10, -12)*self.shift*self.B*self.gamma
         else:
             raise ValueError('Incorrect time unit is specified: use msec or micron')
 
@@ -105,16 +106,18 @@ class fid():
             Sampled times
         dt: float
             Sampling interval, also called timestep
-        SR: float
+        f_s: float
             Sampling rate
         """
-        if self.shift == 0: # 1001 samples total when there is no oscillation
-            dt = self.total_t/1000
-            return np.linspace(0, self.total_t, 1001), dt, 1/dt
+        if self.shift == 0: # 1024 samples total when there is no oscillation
+            dt = self.t_cut/1023
+            return np.arange(0, 1024)*dt, dt, 1/dt
         else:
-            SR = 0.5*self.nsp*self.w/np.pi
-            ns = int(self.total_t*SR) + 1 # total number of samples including t = 0 
-            return np.linspace(0, (ns - 1)/SR, ns), 1/SR, SR
+            f_s = 0.5*self.nsp*self.w/np.pi
+            dt = 1/f_s
+            p = int(np.log2(self.t_cut*f_s + 1)) + 1
+            ns = pow(2, p) # total number of samples including t = 0 
+            return np.arange(0, ns)*dt, dt, f_s
 
     def sgnl(self):
         """
@@ -125,10 +128,10 @@ class fid():
         signal: list[float]
             FID signal
         """
-        return np.exp(-self.t/self.T2)*(np.cos(self.w*self.t) + 1j*np.sin(self.w*self.t))
+        return np.exp(1j*self.w*self.t)*np.exp(-self.t/self.T2)
 
     def __repr__(self):
-        return "fid() [check its attributes if you wish to change the default variables]"
+        return "fid() [check the attributes if you wish to change the default variables]"
 
     def __call__(self):
         """ returns signal """ 
