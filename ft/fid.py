@@ -28,7 +28,7 @@ class fid():
         The sampling duration
     gamma: float
         Gyromagnetic ratio
-    ref_w: float
+    w_ref: float
         Reference angular frequency (lowest frequency)
     w: float
         Adjusted signal frequency according to chemical shift
@@ -69,7 +69,7 @@ class fid():
         self.nsp = nsp
         self.total_t = total_t
         self.gamma = 267.52218744*pow(10,6)
-        self.ref_w = self.B*self.gamma
+        self.w_ref = self.B*self.gamma
         self.w = self.sfrq()
         self.t, self.dt, self.SR = self.time()
         self.signal = self.sgnl()
@@ -89,9 +89,9 @@ class fid():
             If incorrect timeunit is specified (it is either msec or micron).
         """
         if self.timeunit == 'msec':
-            return pow(10, -9)*self.shift*self.ref_w
+            return pow(10, -9)*self.shift*self.w_ref
         elif self.timeunit == 'micron':
-            return pow(10, -12)*self.shift*self.ref_w
+            return pow(10, -12)*self.shift*self.w_ref
         else:
             raise ValueError('Incorrect time unit is specified: use msec or micron')
 
@@ -126,6 +126,9 @@ class fid():
             FID signal
         """
         return np.exp(-self.t/self.T2)*(np.cos(self.w*self.t) + 1j*np.sin(self.w*self.t))
+
+    def __repr__(self):
+        return "fid() [check its attributes if you wish to change the default variables]"
 
     def __call__(self):
         """ returns signal """ 
