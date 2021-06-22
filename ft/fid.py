@@ -7,6 +7,7 @@ proton gyromagnetic ratio: https://physics.nist.gov/cgi-bin/cuu/Value?gammap
 import numpy as np
 
 class fid():
+    gamma = 267.52218744*pow(10,6)
     """
     Free induction decay class.
 
@@ -22,19 +23,21 @@ class fid():
         Chemical shift
     T2: float
         Transverse relaxation time
+    dt: float
+        Sampling interval, also called timestep
     nsp: int
         Number of samples in one period
     t_cut: float
         The sampling duration
     gamma: float
         Gyromagnetic ratio
-    w: float
+    f0: float
         Adjusted signal frequency according to chemical shift
         (It is an observed frequency minus the reference frequency)
+    w: float
+        signal angular frequency
     t: list[float]
         A list of times at which the signal is sampled (~6*T2)
-    dt: float
-        Sampling interval, also called timestep
     f_s: float
         Sampling frequency
     signal: list[float]
@@ -52,13 +55,15 @@ class fid():
         Returns the sampled FID signal
 
     """
+    gamma = 267.52218744*pow(10,6)
+
     def __init__(
             self,
             B=1.5,
             timeunit='msec',
-            shift=0,
+            shift=0.5,
             T2=2000,
-            nsp=40,
+            dt=40,
             t_cut=12000):
         """ 
         Constructor
@@ -68,20 +73,29 @@ class fid():
         self.timeunit = timeunit
         self.shift = shift
         self.T2 = T2
-        self.nsp = nsp
-        self.t_cut = t_cut
-        self.gamma = 267.52218744*pow(10,6)
-        self.w = self.sfrq()
-        self.t, self.dt, self.f_s = self.time()
+        self.dt = dt
+        self.f0, self.nsp = self.sfrq(B, timeunit, dt, shift)
+        self.w = 2*np.pi*self.f0
+        self.f_s, self.ns, self.t = self.time(dt, t_cut)
+        self.f = np.arange(0, self.ns)*self.f_s/self.ns
         self.signal = self.sgnl()
-
-    def sfrq(self):
+    
+    @classmethod
+    def sfrq(cls, B=1.5, timeunit='msec', dt=40, shift=0.5):
         """
         Signal frequency adjusted according to chemical shift
 
+        Parameters
+        ----------
+        B: float
+            External magnetic field
+        timeunit: str
+            Unit for time variable, t
+        shift: float
+            Chemical shift
         Returns
         -------
-        w: float
+        f0: float
             Signal frequency
 
         Raises
@@ -89,14 +103,19 @@ class fid():
         ValueError
             If incorrect timeunit is specified (it is either msec or micron).
         """
-        if self.timeunit == 'msec':
-            return pow(10, -9)*self.shift*self.B*self.gamma
-        elif self.timeunit == 'micron':
-            return pow(10, -12)*self.shift*self.B*self.gamma
+        if timeunit == 'msec':
+            f0 = 0.5*pow(10, -9)*shift*B*cls.gamma/np.pi
+            nsp = 2*np.pi/(f0*dt)
+            return f0, nsp
+        elif timeunit == 'micron':
+            f0 = 0.5*pow(10, -12)*shift*B*cls.gamma/np.pi
+            nsp = 2*np.pi/(f0*dt)
+            return f0, nsp
         else:
             raise ValueError('Incorrect time unit is specified: use msec or micron')
 
-    def time(self):
+    @staticmethod
+    def time(dt, t_cut):
         """
         A list of times at which the signal is sampled with sampling interval and rate.
 
@@ -109,15 +128,10 @@ class fid():
         f_s: float
             Sampling rate
         """
-        if self.shift == 0: # 1024 samples total when there is no oscillation
-            dt = self.t_cut/1023
-            return np.arange(0, 1024)*dt, dt, 1/dt
-        else:
-            f_s = 0.5*self.nsp*self.w/np.pi
-            dt = 1/f_s
-            p = int(np.log2(self.t_cut*f_s + 1)) + 1
-            ns = pow(2, p) # total number of samples including t = 0 
-            return np.arange(0, ns)*dt, dt, f_s
+        f_s = 1/dt
+        p = int(np.log2(t_cut*f_s + 1)) + 1
+        ns = pow(2, p) # total number of samples including t = 0 
+        return f_s, ns, np.arange(0, ns)*dt,
 
     def sgnl(self):
         """
