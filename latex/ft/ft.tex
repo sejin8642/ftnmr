@@ -41,7 +41,8 @@
 \newcommand{\conv}[4]{\fint #3(#2)#4(#1 - #2) d#2} % Convolution
 \newcommand{\ssum}[1]{\sum_{#1 = 0}^{N - 1}} % sum from 0 to N-1
 \newcommand{\dft}[3]{\ssum{#1} #2 e^{-2\pi i#3#1/N}} % DFT 
-\newcommand{\idft}[3]{\frac{1}{N}\ssum{#1} #2 e^{2\pi i#3#1/N}} % DFT 
+\newcommand{\idft}[3]{\frac{1}{N}\ssum{#1} #2 e^{2\pi i#3#1/N}} % Inverse DFT 
+\newcommand{\dtft}[3]{\fsum{#1} #2 e^{-2\pi i#3#1}}
 
 % Numbering equation and figure with section number
 \numberwithin{equation}{section}
@@ -430,6 +431,7 @@ In other words,
 	\begin{aligned}[b]
 		\fsum{n} s(n \Delta t) e^{-2\pi ifn\Delta t} \Delta t 
 			&= \fsum{k} S(f + kf_{s}) 
+			\label{eq:ftsu1}
 	\end{aligned}
 \end{equation}
 
@@ -475,8 +477,46 @@ The inverse DFT of \(X_{k}\) is:
 			&= x_{n}
 	\end{aligned}
 \end{equation}
-Where I used the orthogonal relation \eqref{eq:kronecker}\cite{james}. There is another version of DFT called discrete-time Fourier transform (DTFT in short)\index{discrete-time Fourier transform}. The only difference is that the sum runs from negative infinity to positive infinity with a continuous domain (the example is \eqref{eq:ftsu}, which is DTFT of \(\Delta t\cdot s(n\Delta t)\) whose element of the domain is \(f\)). 
+Where I used the orthogonal relation \eqref{eq:kronecker}\cite{james}. There is another version of DFT called discrete-time Fourier transform (DTFT in short)\index{discrete-time Fourier transform}. The only difference is that the sum runs from negative infinity to positive infinity with a continuous domain (the example is \eqref{eq:ftsu}, which is DTFT of \(\Delta t\cdot s(n\Delta t)\) whose element of the domain is \(f\Delta t\)). 
 
+% 3.2 Approximation of DFT
+\subsection{Approximation of DFT}
+Consider a function \(x(t)\) and let \(x_{n} = x(n\Delta t)\). Then its DTFT is:
+\begin{equation}
+	\begin{aligned}[b]
+		X(a) = \dtft{n}{x_{n}}{a} 
+	\end{aligned}
+\end{equation}
+Now suppose that \(x(t) = 0\) for all \(t < 0\) and \(x(t) \approx 0\) after some time \(t = N\Delta T\) where \(N \in \mathbb{N}\) (in other words, \(x_{n} \approx 0\) for \(n \ge N\)). And we are only interested in \(a\) values such that \(a = k/N\) where \(k\) is an integer and \(0 \leq k \leq N - 1\). Then
+\begin{equation}
+	\begin{aligned}[b]
+		X_{k} 	&= X(k/N)\\
+			&= \dtft{n}{x_{n}}{(k/N)}\\
+			&\approx \dft{n}{x_{n}}{k}
+	\end{aligned}
+\end{equation}
+Which is just DFT of \(x_{n}\). We can take this analogy further with CTFT. Consider \(x(t)=f_{s} s(t)u(t)\) such that \(s(t)\) has the properties that \(x(t)\) has described above and \(u(t)\) is a sampling function with the sampling rate \(f_{s}\). Then we know from \eqref{eq:ftsu} that
+\begin{equation}
+	\begin{aligned}[b]
+		\fourier{t}{x}
+			&= \fsum{n} s_{n} e^{-2\pi ifn\Delta t} 
+	\end{aligned}
+\end{equation}
+Where \(s_{n} = s(n\Delta t)\). If we are only interested in frequencies \(f = kf_{s}/N\) where \(k\) is an integer and \(0 \leq k \leq N - 1\), then with the properties of \(s\), we have
+\begin{equation}
+	\begin{aligned}[b]
+		\fsum{n} s_{n} e^{-2\pi ifn\Delta t}
+			&\approx \dft{n}{s_{n}}{k}
+	\end{aligned}
+\end{equation}
+In other words, by applying \eqref{eq:ftsu1}, we have
+\begin{equation}
+	\begin{aligned}[b]
+		S_{k}	&= \dft{n}{s_{n}}{k}\\
+			&\approx f_{s}\fsum{p} S(f_{k} + pf_{s}) 
+	\end{aligned}
+\end{equation}
+Where \(f_{k} = kf_{s}/N\). Here, \(S_{k}\) is DFT of \(s_{n}\) and \(S(f)\) is CTFT of \(s(t)\).
 % Bibliography and index
 \clearpage
 \pagestyle{plain}

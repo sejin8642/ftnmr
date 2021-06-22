@@ -34,6 +34,8 @@
 \defcounter {refsection}{0}\relax 
 \contentsline {subsection}{\numberline {3.1}Definition of DFT}{8}{subsection.3.1}%
 \defcounter {refsection}{0}\relax 
-\contentsline {section}{References}{9}{section*.3}%
+\contentsline {subsection}{\numberline {3.2}Approximation of DFT}{8}{subsection.3.2}%
 \defcounter {refsection}{0}\relax 
-\contentsline {section}{Index}{10}{section*.4}%
+\contentsline {section}{References}{10}{section*.3}%
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{Index}{11}{section*.4}%
