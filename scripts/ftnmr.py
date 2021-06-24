@@ -1,13 +1,14 @@
-# simple free induction decay code
 # References
 """
 Keeler pg.49 for general signal form
 proton gyromagnetic ratio: https://physics.nist.gov/cgi-bin/cuu/Value?gammap
 """
+
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy
 
+# Math graph
 def graph(x, y, xlabel=r'$x$', ylabel=r'$y$', save=False, filename='figure.eps'):
     # LaTeX font with size 9
     plt.rcParams.update({
@@ -66,6 +67,7 @@ def graph(x, y, xlabel=r'$x$', ylabel=r'$y$', save=False, filename='figure.eps')
     # show the plot
     plt.show()
 
+# free induction decay
 class fid():
     """
     Free induction decay class.
