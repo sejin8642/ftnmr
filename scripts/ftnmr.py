@@ -84,6 +84,8 @@ class fid():
         Chemical shift
     T2: float
         Transverse relaxation time
+    r: float
+        Relaxivity
     dt: float
         Sampling interval, also called timestep
     nsp: int
@@ -134,6 +136,7 @@ class fid():
         self.timeunit = timeunit
         self.shift = shift
         self.T2 = T2
+        self.r = 1/T2
         self.dt = dt
         self.f0, self.nsp = self.sfrq(B, timeunit, dt, shift)
         self.w = 2*np.pi*self.f0
@@ -203,7 +206,7 @@ class fid():
         signal: list[float]
             FID signal
         """
-        return np.exp(1j*self.w*self.t)*np.exp(-self.t/self.T2)
+        return np.exp(1j*self.w*self.t)*np.exp(-self.r*self.t)
 
     def __repr__(self):
         return "fid() [check the attributes if you wish to change the default variables]"
@@ -211,3 +214,49 @@ class fid():
     def __call__(self):
         """ returns signal """ 
         return self.signal
+
+# Lorentzian class
+class lorentzian():
+    """
+    Absorption Lorentzian class
+
+    This class will create an absorption Lorentzian profile with frequency domain
+
+    Attributes
+    ----------
+    f: list[float]
+        Domain frequencies
+    r: float
+        Relaxivity
+    f0: float
+        Larmor frequency
+    lorentz: list[float]
+        Lorentzian function output
+
+    Methods
+    -------
+    lorz()
+        Returns the lorentz attribute
+    """
+    def __init__(self, df, ns, r, f0):
+        """
+        Constructor
+
+        Maximum f from FT is f_s - df where f_s is the sampling rate in time domain
+        """
+        self.f = np.arange(0, ns)*df
+        self.r = r
+        self.f0 = f0
+        self.lorentz = lorz()
+
+    def lorz(self):
+        """
+        Lorentzian function
+
+        Returns
+        -------
+        lorentz: list[float]
+            Lorentzian output
+        """
+        real = self.r/(pow(r, 2) + 4*pow(np.pi, 2)*pow((self.f - self.f0), 2) ) 
+        imag = 
