@@ -99,10 +99,12 @@ class fid():
         (It is an observed frequency minus the reference frequency)
     w: float
         signal angular frequency
-    t: list[float]
-        A list of times at which the signal is sampled (~6*T2)
     f_s: float
         Sampling frequency
+    ns: integer
+        Total number of samples
+    t: list[float]
+        A list of times at which the signal is sampled (~6*T2)
     signal: list[float]
         FID signal
 
@@ -126,11 +128,25 @@ class fid():
             timeunit='msec',
             shift=0.5,
             T2=2000,
-            dt=40,
+            dt=10,
             t_cut=12000):
         """ 
         Constructor
 
+        Parameters
+        ----------
+        B: float
+            External magnetic field (default 1.5 Tesla) 
+        timeunit: string
+            Unit string for time variable. It is either msec or micron (default msec)
+        shift: float
+            Chemical shift (default 0.5)
+        T2: float
+            Relaxation constant (default 2000)
+        dt: float
+            Sampling interval (default 40)
+        t_cut: float
+            Cutoff time that the maximum t valule must exceed (default 12000)
         """
         self.B = B # Approximately 2000 msec is T2 for water/CSF at 1.5T
         self.timeunit = timeunit
@@ -141,9 +157,8 @@ class fid():
         self.f0, self.nsp = self.sfrq(B, timeunit, dt, shift)
         self.w = 2*np.pi*self.f0
         self.f_s, self.ns, self.t = self.time(dt, t_cut)
-        self.f = np.arange(0, self.ns)*self.f_s/self.ns
         self.signal = self.sgnl()
-    
+
     @classmethod
     def sfrq(cls, B=1.5, timeunit='msec', dt=40, shift=0.5):
         """
@@ -242,12 +257,21 @@ class lorentzian():
         """
         Constructor
 
-        Maximum f from FT is f_s - df where f_s is the sampling rate in time domain
+        Parameters
+        ----------
+        df: float
+            Frequency interval (Sampling frequency over number of samples)
+        ns: integer
+            Total number of frequencies
+        r: float
+            Relaxivity
+        f0:
+            Frequency shift
         """
         self.f = np.arange(0, ns)*df
         self.r = r
         self.f0 = f0
-        self.lorentz = lorz()
+        self.lorentz = self.lorz()
 
     def lorz(self):
         """
@@ -258,5 +282,11 @@ class lorentzian():
         lorentz: list[float]
             Lorentzian output
         """
-        real = self.r/(pow(r, 2) + 4*pow(np.pi, 2)*pow((self.f - self.f0), 2) ) 
-        imag = 
+        A = 2*np.pi*(self.f0 - self.f)
+        B = pow(self.r, 2) + 4*pow(np.pi, 2)*pow((self.f - self.f0), 2)
+
+        return self.r/B + 1j*A/B
+
+    def __call__(self):
+        """ returns lorentz """
+        return self.lorentz
