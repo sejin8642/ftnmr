@@ -121,6 +121,7 @@ class fid():
 
     """
     gamma = 267.52218744*pow(10,6)
+    maximum_shift = 10
 
     def __init__(
             self,
@@ -128,7 +129,6 @@ class fid():
             timeunit='msec',
             shift=0.5,
             T2=2000,
-            dt=10,
             t_cut=12000):
         """ 
         Constructor
@@ -137,14 +137,12 @@ class fid():
         ----------
         B: float
             External magnetic field (default 1.5 Tesla) 
-        timeunit: string
+        timeunit: str
             Unit string for time variable. It is either msec or micron (default msec)
         shift: float
             Chemical shift (default 0.5)
         T2: float
             Relaxation constant (default 2000)
-        dt: float
-            Sampling interval (default 40)
         t_cut: float
             Cutoff time that the maximum t valule must exceed (default 12000)
         """
@@ -153,14 +151,43 @@ class fid():
         self.shift = shift
         self.T2 = T2
         self.r = 1/T2
-        self.dt = dt
-        self.f0, self.nsp = self.sfrq(B, timeunit, dt, shift)
+        self.dt = self.sample_interval(timeunit, B)
+        self.f0, self.nsp = self.sfrq(B, timeunit, shift, self.dt)
         self.w = 2*np.pi*self.f0
-        self.f_s, self.ns, self.t = self.time(dt, t_cut)
+        self.f_s, self.ns, self.t = self.time(self.dt, t_cut)
         self.signal = self.sgnl()
 
     @classmethod
-    def sfrq(cls, B=1.5, timeunit='msec', dt=40, shift=0.5):
+    def sample_interval(cls, timeunit, B):
+        """
+        Returns sampling interval based on the external B field and maximum chemical shift
+
+        Parameters
+        ----------
+        timeunit: str
+            Unit string for time variable
+        B: float
+            External magnetic field
+
+        Returns
+        -------
+        dt: float
+            Sampling interval
+
+        Raises
+        ------
+        ValueError
+            If incorrect timeunit is specified (It is either msec or micron).
+        """
+        if timeunit == 'msec':
+            return 2*np.pi*pow(10, 9)/(cls.maximum_shift*cls.gamma*B)
+        elif timeunit == 'micron':
+            return 2*np.pi*pow(10, 12)/(cls.maximum_shift*cls.gamma*B)
+        else:
+            raise ValueError('Incorrect time unit is specified: use msec or micron')
+
+    @classmethod
+    def sfrq(cls, B, timeunit, shift, dt):
         """
         Signal frequency adjusted according to chemical shift
 
@@ -172,6 +199,7 @@ class fid():
             Unit for time variable, t
         shift: float
             Chemical shift
+
         Returns
         -------
         f0: float
@@ -290,3 +318,6 @@ class lorentzian():
     def __call__(self):
         """ returns lorentz """
         return self.lorentz
+
+# Baseline
+
