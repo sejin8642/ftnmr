@@ -72,7 +72,7 @@ class fid():
     """
     Free induction decay class.
 
-    This class will create a FID signal with only one adjusted signal.
+    This class will create a FID signal with only one adjusted signal. All the class variables are in SI unit, but time for instance variable is either msec or micron.
 
     Attributes
     ----------
@@ -121,13 +121,13 @@ class fid():
 
     """
     gamma = 267.52218744*pow(10,6)
-    maximum_shift = 10
 
     def __init__(
             self,
             B=1.5,
             timeunit='msec',
             shift=0.5,
+            shift_maximum=10.0,
             T2=2000,
             t_cut=12000):
         """ 
@@ -141,24 +141,27 @@ class fid():
             Unit string for time variable. It is either msec or micron (default msec)
         shift: float
             Chemical shift (default 0.5)
+        shift_maximum: float
+            Maximum chemical shift to set the maximum frequency (default 10.0)
         T2: float
-            Relaxation constant (default 2000)
+            Relaxation constant (default 2000.0)
         t_cut: float
-            Cutoff time that the maximum t valule must exceed (default 12000)
+            Cutoff time that the maximum t valule must exceed (default 12000.0)
         """
         self.B = B # Approximately 2000 msec is T2 for water/CSF at 1.5T
         self.timeunit = timeunit
         self.shift = shift
+        self.shift_maximum = shift_maximum
         self.T2 = T2
         self.r = 1/T2
-        self.dt = self.sample_interval(timeunit, B)
-        self.f0, self.nsp = self.sfrq(B, timeunit, shift, self.dt)
+        self.dt = self.sample_interval(shift_maximum, timeunit, B)
+        self.f0, self.nsp = self.signal_frequency(B, timeunit, shift, self.dt)
         self.w = 2*np.pi*self.f0
         self.f_s, self.ns, self.t = self.time(self.dt, t_cut)
-        self.signal = self.sgnl()
+        self.signal = self.signal_output()
 
     @classmethod
-    def sample_interval(cls, timeunit, B):
+    def sample_interval(cls, shift_maximum, timeunit, B):
         """
         Returns sampling interval based on the external B field and maximum chemical shift
 
@@ -180,14 +183,14 @@ class fid():
             If incorrect timeunit is specified (It is either msec or micron).
         """
         if timeunit == 'msec':
-            return 2*np.pi*pow(10, 9)/(cls.maximum_shift*cls.gamma*B)
+            return 2*np.pi*pow(10, 9)/(shift_maximum*cls.gamma*B)
         elif timeunit == 'micron':
-            return 2*np.pi*pow(10, 12)/(cls.maximum_shift*cls.gamma*B)
+            return 2*np.pi*pow(10, 12)/(shift_maximum*cls.gamma*B)
         else:
             raise ValueError('Incorrect time unit is specified: use msec or micron')
 
     @classmethod
-    def sfrq(cls, B, timeunit, shift, dt):
+    def signal_frequency(cls, B, timeunit, shift, dt):
         """
         Signal frequency adjusted according to chemical shift
 
@@ -240,7 +243,7 @@ class fid():
         ns = pow(2, p) # total number of samples including t = 0 
         return f_s, ns, np.arange(0, ns)*dt,
 
-    def sgnl(self):
+    def signal_output(self):
         """
         Sampled FID signal
 
