@@ -72,7 +72,7 @@ def larmor(B=1.5, unit='MHz'):
     """ Returns Larmor angular frequency based on external B field """
     if unit=='MHz':
         return 267.52218744*B
-    elif unit=='KHz':
+    elif unit=='kHz':
         return 267.52218744*pow(10,3)*B
     else:
         raise ValueError("Frequency unit must be either MHz or KHz")
@@ -92,39 +92,43 @@ class fid():
         Unit for time variable, t
     shift: float
         Chemical shift
+    shift_maximum: float
+        Maximum chemical shift the spectrometer can observer
     T2: float
         Transverse relaxation time
     r: float
-        Relaxivity
+        Relaxivity for T2
     dt: float
         Sampling interval, also called timestep
-    nsp: int
+    nsp: float
         Number of samples in one period
     t_cut: float
-        The sampling duration
+        The minimum sampling duration
     gamma: float
         Gyromagnetic ratio
     f0: float
         Adjusted signal frequency according to chemical shift
-        (It is an observed frequency minus the reference frequency)
+        (It is a detected frequency minus the reference frequency)
     w: float
-        signal angular frequency
+        Adjusted signal angular frequency
     f_s: float
         Sampling frequency
     ns: integer
         Total number of samples
     t: list[float]
-        A list of times at which the signal is sampled (~6*T2)
+        A list of times at which the signal is sampled (default ~6*T2)
     signal: list[float]
         FID signal
 
     Methods
     -------
-    sftq()
+    sampling_frequency()
+        Returns a sampling frequency
+    signal_frequency()
         Returns an adjusted signal frequency
     time()
         Returns a list of sampling times and sampling rate f_s
-    sgnl()
+    signal_output()
         Returns FID signal
     call()
         Returns the sampled FID signal
@@ -137,7 +141,7 @@ class fid():
             B=1.5,
             timeunit='msec',
             shift=5.0,
-            shift_maximum=15.0,
+            shift_maximum=100.0,
             T2=2000,
             t_cut=12000):
         """ 
@@ -158,49 +162,50 @@ class fid():
         t_cut: float
             Cutoff time that the maximum t valule must exceed (default 12000.0)
         """
+
+        # Constructor parameters
         self.B = B # Approximately 2000 msec is T2 for water/CSF at 1.5T
         self.timeunit = timeunit
         self.shift = shift
         self.shift_maximum = shift_maximum
         self.T2 = T2
         self.r = 1/T2
-        self.dt = self.sample_interval(shift_maximum, timeunit, B)
-        self.f0, self.nsp, self.frequency_unit = self.signal_frequency(B, timeunit, shift, self.dt)
+        self.f_s, self.frequency_unit = self.sampling_frequency(shift_maximum, B, timeunit)
+        self.dt = 1/self.f_s
+        self.ns, self.t = self.time(self.f_s, t_cut)
+        self.f0 = self.signal_frequency(B, timeunit, shift)
+        self.nsp = 1/(self.f0*self.dt)
         self.w = 2*np.pi*self.f0
-        self.f_s, self.ns, self.t = self.time(self.dt, t_cut)
         self.signal = self.signal_output()
 
     @classmethod
-    def sample_interval(cls, shift_maximum, timeunit, B):
+    def sampling_frequency(cls, shift_maximum, B, timeunit):
         """
-        Returns sampling interval based on the external B field and maximum chemical shift
+        Returns sampling frequency based on the external B field and maximum chemical shift
 
         Parameters
         ----------
-        timeunit: str
-            Unit string for time variable
+        shift_maximum: float
+            Maximum chemical shift the spectrometer can observe
         B: float
             External magnetic field
+        timeunit: str
+            unit for time variable (either msec or micron)
 
         Returns
         -------
-        dt: float
-            Sampling interval
-
-        Raises
-        ------
-        ValueError
-            If incorrect timeunit is specified (It is either msec or micron).
+        f_s: float
+            Sampling frequency or the maximum frequency of the spectrometer
         """
         if timeunit == 'msec':
-            return 2*np.pi*pow(10, 9)/(shift_maximum*cls.gamma*B)
+            return 0.5*shift_maximum*cls.gamma*B*pow(10, -9)/np.pi, 'kHz'
         elif timeunit == 'micron':
-            return 2*np.pi*pow(10, 12)/(shift_maximum*cls.gamma*B)
+            return 0.5*shift_maximum*cls.gamma*B*pow(10, -12)/np.pi, 'MHz'
         else:
             raise ValueError('Incorrect time unit is specified: use msec or micron')
 
     @classmethod
-    def signal_frequency(cls, B, timeunit, shift, dt):
+    def signal_frequency(cls, B, timeunit, shift):
         """
         Signal frequency adjusted according to chemical shift
 
@@ -224,18 +229,14 @@ class fid():
             If incorrect timeunit is specified (it is either msec or micron).
         """
         if timeunit == 'msec':
-            f0 = 0.5*pow(10, -9)*shift*B*cls.gamma/np.pi
-            nsp = 2*np.pi/(f0*dt)
-            return f0, nsp, 'KHz'
+            return 0.5*pow(10, -9)*shift*B*cls.gamma/np.pi
         elif timeunit == 'micron':
-            f0 = 0.5*pow(10, -12)*shift*B*cls.gamma/np.pi
-            nsp = 2*np.pi/(f0*dt)
-            return f0, nsp, 'MHz'
+            return 0.5*pow(10, -12)*shift*B*cls.gamma/np.pi
         else:
             raise ValueError('Incorrect time unit is specified: use msec or micron')
 
     @staticmethod
-    def time(dt, t_cut):
+    def time(f_s, t_cut):
         """
         A list of times at which the signal is sampled with sampling interval and rate.
 
@@ -243,15 +244,12 @@ class fid():
         -------
         t: list[float]
             Sampled times
-        dt: float
-            Sampling interval, also called timestep
         f_s: float
             Sampling rate
         """
-        f_s = 1/dt
         p = int(np.log2(t_cut*f_s + 1)) + 1
         ns = pow(2, p) # total number of samples including t = 0 
-        return f_s, ns, np.arange(0, ns)*dt,
+        return ns, np.arange(0, ns)/f_s
 
     def signal_output(self):
         """
