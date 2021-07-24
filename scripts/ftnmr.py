@@ -67,6 +67,16 @@ def graph(x, y, xlabel=r'$x$', ylabel=r'$y$', save=False, filename='figure.eps')
     # show the plot
     plt.show()
 
+# Larmor angular frequency
+def larmor(B=1.5, unit='MHz'):
+    """ Returns Larmor angular frequency based on external B field """
+    if unit=='MHz':
+        return 267.52218744*B
+    elif unit=='KHz':
+        return 267.52218744*pow(10,3)*B
+    else:
+        raise ValueError("Frequency unit must be either MHz or KHz")
+
 # free induction decay
 class fid():
     """
@@ -126,8 +136,8 @@ class fid():
             self,
             B=1.5,
             timeunit='msec',
-            shift=0.5,
-            shift_maximum=10.0,
+            shift=5.0,
+            shift_maximum=15.0,
             T2=2000,
             t_cut=12000):
         """ 
@@ -155,7 +165,7 @@ class fid():
         self.T2 = T2
         self.r = 1/T2
         self.dt = self.sample_interval(shift_maximum, timeunit, B)
-        self.f0, self.nsp = self.signal_frequency(B, timeunit, shift, self.dt)
+        self.f0, self.nsp, self.frequency_unit = self.signal_frequency(B, timeunit, shift, self.dt)
         self.w = 2*np.pi*self.f0
         self.f_s, self.ns, self.t = self.time(self.dt, t_cut)
         self.signal = self.signal_output()
@@ -216,11 +226,11 @@ class fid():
         if timeunit == 'msec':
             f0 = 0.5*pow(10, -9)*shift*B*cls.gamma/np.pi
             nsp = 2*np.pi/(f0*dt)
-            return f0, nsp
+            return f0, nsp, 'KHz'
         elif timeunit == 'micron':
             f0 = 0.5*pow(10, -12)*shift*B*cls.gamma/np.pi
             nsp = 2*np.pi/(f0*dt)
-            return f0, nsp
+            return f0, nsp, 'MHz'
         else:
             raise ValueError('Incorrect time unit is specified: use msec or micron')
 
@@ -322,5 +332,4 @@ class lorentzian():
         """ returns lorentz """
         return self.lorentz
 
-# Baseline
-
+# Baseline 
