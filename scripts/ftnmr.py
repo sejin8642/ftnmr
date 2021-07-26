@@ -69,13 +69,25 @@ def graph(x, y, xlabel=r'$x$', ylabel=r'$y$', save=False, filename='figure.eps')
 
 # Larmor angular frequency
 def larmor(B=1.5, unit='MHz'):
-    """ Returns Larmor angular frequency based on external B field """
+    """ Returns Larmor angular frequency based on external B field 
+
+    Parameters
+    ----------
+    B: float
+        Magnetic field in unit of Tesla
+    unit: str
+        Unit for ordinary frequency (default MHz)
+
+    Returns
+    -------
+        Larmor angular frequency in either MHz or kHz
+    """
     if unit=='MHz':
         return 267.52218744*B
     elif unit=='kHz':
         return 267.52218744*pow(10,3)*B
     else:
-        raise ValueError("Frequency unit must be either MHz or KHz")
+        raise ValueError("Frequency unit must be either MHz or kHz")
 
 # free induction decay
 class fid():
@@ -113,6 +125,8 @@ class fid():
         Adjusted signal angular frequency
     f_s: float
         Sampling frequency
+    f_l: float
+        Ordinary Larmor frequency
     ns: integer
         Total number of samples
     t: list[float]
@@ -138,12 +152,12 @@ class fid():
 
     def __init__(
             self,
-            B=1.5,
+            B=10.0,
             timeunit='msec',
             shift=5.0,
-            shift_maximum=100.0,
-            T2=2000,
-            t_cut=12000):
+            shift_maximum=128.0,
+            T2=100,
+            t_cut=650):
         """ 
         Constructor
 
@@ -154,9 +168,9 @@ class fid():
         timeunit: str
             Unit string for time variable. It is either msec or micron (default msec)
         shift: float
-            Chemical shift (default 0.5)
+            Chemical shift in units of ppm (default 0.5 ppm)
         shift_maximum: float
-            Maximum chemical shift to set the maximum frequency (default 10.0)
+            Maximum chemical shift to set the maximum frequency (default 128.0 ppm)
         T2: float
             Relaxation constant (default 2000.0)
         t_cut: float
@@ -170,7 +184,7 @@ class fid():
         self.shift_maximum = shift_maximum
         self.T2 = T2
         self.r = 1/T2
-        self.f_s, self.frequency_unit = self.sampling_frequency(shift_maximum, B, timeunit)
+        self.f_s, self.f_l, self.frquency_unit = self.sampling_frequency(shift_maximum, B, timeunit)
         self.dt = 1/self.f_s
         self.ns, self.t = self.time(self.f_s, t_cut)
         self.f0 = self.signal_frequency(B, timeunit, shift)
@@ -196,11 +210,17 @@ class fid():
         -------
         f_s: float
             Sampling frequency or the maximum frequency of the spectrometer
+        f_l: float
+            Ordinary Larmor frequency
         """
         if timeunit == 'msec':
-            return 0.5*shift_maximum*cls.gamma*B*pow(10, -9)/np.pi, 'kHz'
+            f_s = 0.5*shift_maximum*cls.gamma*B*pow(10, -9)/np.pi
+            f_l = 0.5*cls.gamma*B*pow(10, -3)/np.pi
+            return f_s, f_l, 'kHz'
         elif timeunit == 'micron':
-            return 0.5*shift_maximum*cls.gamma*B*pow(10, -12)/np.pi, 'MHz'
+            f_s = 0.5*shift_maximum*cls.gamma*B*pow(10, -12)/np.pi,
+            f_l = 0.5*cls.gamma*B*pow(10, -6)/np.pi
+            return f_s, f_l, 'MHz'
         else:
             raise ValueError('Incorrect time unit is specified: use msec or micron')
 
