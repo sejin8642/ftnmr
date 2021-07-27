@@ -129,6 +129,8 @@ class fid():
         Ordinary Larmor frequency
     ns: integer
         Total number of samples
+    p: integer
+        Power of two that yields the number of samples
     t: list[float]
         A list of times at which the signal is sampled (default ~6*T2)
     signal: list[float]
@@ -157,7 +159,7 @@ class fid():
             shift=5.0,
             shift_maximum=128.0,
             T2=100,
-            t_cut=650):
+            t_cut=600):
         """ 
         Constructor
 
@@ -172,12 +174,12 @@ class fid():
         shift_maximum: float
             Maximum chemical shift to set the maximum frequency (default 128.0 ppm)
         T2: float
-            Relaxation constant (default 2000.0)
+            Relaxation constant (default 100.0)
         t_cut: float
             Cutoff time that the maximum t valule must exceed (default 12000.0)
         """
 
-        # Constructor parameters
+        # Instance attributes
         self.B = B # Approximately 2000 msec is T2 for water/CSF at 1.5T
         self.timeunit = timeunit
         self.shift = shift
@@ -186,7 +188,7 @@ class fid():
         self.r = 1/T2
         self.f_s, self.f_l, self.frquency_unit = self.sampling_frequency(shift_maximum, B, timeunit)
         self.dt = 1/self.f_s
-        self.ns, self.t = self.time(self.f_s, t_cut)
+        self.ns, self.p, self.t = self.time(self.f_s, t_cut)
         self.f0 = self.signal_frequency(B, timeunit, shift)
         self.nsp = 1/(self.f0*self.dt)
         self.w = 2*np.pi*self.f0
@@ -269,7 +271,7 @@ class fid():
         """
         p = int(np.log2(t_cut*f_s + 1)) + 1
         ns = pow(2, p) # total number of samples including t = 0 
-        return ns, np.arange(0, ns)/f_s
+        return ns, p, np.arange(0, ns)/f_s
 
     def signal_output(self):
         """
@@ -312,7 +314,7 @@ class lorentzian():
     lorz()
         Returns the lorentz attribute
     """
-    def __init__(self, df, ns, r, f0):
+    def __init__(self, f_max, ns, r, f0):
         """
         Constructor
 
@@ -327,7 +329,7 @@ class lorentzian():
         f0:
             Frequency shift
         """
-        self.f = np.arange(0, ns)*df
+        self.f = np.arange(0, ns)*f_max/ns # the last f excludes f_max
         self.r = r
         self.f0 = f0
         self.lorentz = self.lorz()
