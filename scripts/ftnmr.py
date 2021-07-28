@@ -89,7 +89,7 @@ def larmor(B=1.5, unit='MHz'):
     else:
         raise ValueError("Frequency unit must be either MHz or kHz")
 
-# free induction decay
+# fid class (free induction decay)
 class fid():
     """
     Free induction decay class.
@@ -127,6 +127,8 @@ class fid():
         Sampling frequency
     f_l: float
         Ordinary Larmor frequency
+    frequency_unit: str
+        Unit for ordinary frequency used
     ns: integer
         Total number of samples
     p: integer
@@ -150,8 +152,11 @@ class fid():
         Returns the sampled FID signal
 
     """
+
+    # fid class attributes
     gamma = 267.52218744*pow(10,6)
 
+    # fid constructor
     def __init__(
             self,
             B=10.0,
@@ -179,14 +184,14 @@ class fid():
             Cutoff time that the maximum t valule must exceed (default 12000.0)
         """
 
-        # Instance attributes
+        # fid object attributes
         self.B = B # Approximately 2000 msec is T2 for water/CSF at 1.5T
         self.timeunit = timeunit
         self.shift = shift
         self.shift_maximum = shift_maximum
         self.T2 = T2
         self.r = 1/T2
-        self.f_s, self.f_l, self.frquency_unit = self.sampling_frequency(shift_maximum, B, timeunit)
+        self.f_s, self.f_l, self.frequency_unit = self.sampling_frequency(shift_maximum, B, timeunit)
         self.dt = 1/self.f_s
         self.ns, self.p, self.t = self.time(self.f_s, t_cut)
         self.f0 = self.signal_frequency(B, timeunit, shift)
@@ -301,11 +306,14 @@ class lorentzian():
     Attributes
     ----------
     f: list[float]
-        Domain frequencies
+    unit: str
+        Unit string for ordinary frequency (default kHz)
+    ns: integer
+        Total number of frequencies (default pow(2, 15))
     r: float
         Relaxivity
     f0: float
-        Larmor frequency
+        Ordinary Larmor frequency
     lorentz: list[float]
         Lorentzian function output
 
@@ -314,26 +322,59 @@ class lorentzian():
     lorz()
         Returns the lorentz attribute
     """
-    def __init__(self, f_max, ns, r, f0):
+
+    # Lorentzian constructor
+    def __init__(
+            self,
+            unit='kHz',
+            ns=pow(2,15),
+            f_max=55.0,
+            r=0.01,
+            f0=4.25,
+            f_l=425000,
+            ob=object()):
         """
         Constructor
 
         Parameters
         ----------
-        df: float
-            Frequency interval (Sampling frequency over number of samples)
+        unit: str
+            Unit string for ordinary frequency (default kHz)
         ns: integer
-            Total number of frequencies
+            Total number of frequencies (default pow(2, 15))
+        f_max: float
+            Maximum frequency for f-domain (default 55.0)
         r: float
-            Relaxivity
-        f0:
-            Frequency shift
+            Relaxivity (default 0.01)
+        f0: float
+            Adjusted detected frequency (default 4.25)
+        f_l: float
+            Ordinary Larmor frequency (default 425000)
+        ob: fid class
+            fid object from which to extract its attributes (default object())
         """
-        self.f = np.arange(0, ns)*f_max/ns # the last f excludes f_max
-        self.r = r
-        self.f0 = f0
-        self.lorentz = self.lorz()
 
+        # Lorentzian object attributes
+        if isinstance(ob, fid):
+            self.unit = ob.frequency_unit
+            self.ns = ob.ns
+            self.p = ob.p
+            self.f = np.arange(0, ob.ns)*ob.f_s/ob.ns # the last f excludes fmax
+            self.cs = pow(10, 6)*self.f/ob.f_l
+            self.r = ob.r
+            self.f0 = ob.f0
+            self.lorentz = self.lorz()
+        else:
+            self.unit = unit
+            self.ns = ns
+            self.p = np.log2(ns)
+            self.f = np.arange(0, ns)*f_max/ns # the last f excludes f_max
+            self.cs = pow(10, 6)*self.f/f_l
+            self.r = r
+            self.f0 = f0
+            self.lorentz = self.lorz()
+
+    # lorz method of Lorentzian
     def lorz(self):
         """
         Lorentzian function
