@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy
 
-# Larmor angular frequency
+# Larmor angular frequency function
 def larmor(B=1.5, unit='MHz'):
     """ Returns Larmor angular frequency based on external B field 
 
@@ -29,6 +29,48 @@ def larmor(B=1.5, unit='MHz'):
         return 267.52218744*pow(10,3)*B
     else:
         raise ValueError("Frequency unit must be either MHz or kHz")
+
+# molecule class
+class molecule():
+    """ 
+    Molecule class
+
+    Attributes
+    ----------
+
+    """
+    def __init__(
+            a=1):
+        """ molecule constructor
+
+        Parameters
+        ----------
+        """ 
+        pass
+
+# spectrometer class
+class spectrometer():
+    """
+    Spectrometer class
+
+    Attributes
+    ----------
+
+    """
+
+    # spectrometer constructor
+    def __init__(
+            B=10.0,
+            timeunit='msec',
+            shift_maximum=128.0,
+            t_cut=600):
+        """ spectrometer constructor
+
+        Parameters
+        ----------
+
+        """
+        pass
 
 # fid class (free induction decay for a single proton)
 class fid():
@@ -102,10 +144,10 @@ class fid():
             self,
             B=10.0,
             timeunit='msec',
-            shift=5.0,
             shift_maximum=128.0,
-            T2=100,
-            t_cut=600):
+            t_cut=600,
+            shift=5.0,
+            T2=100):
         """ 
         Constructor
 
