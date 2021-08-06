@@ -30,22 +30,28 @@ def larmor(B=1.5, unit='MHz'):
     else:
         raise ValueError("Frequency unit must be either MHz or kHz")
 
-# molecule class
-class molecule():
-    """ 
-    Molecule class
+# molecule class 
+class molecule(): 
+    """ Molecule class 
 
     Attributes
     ----------
 
     """
     def __init__(
-            a=1):
+            hydrogens={'a':(1, 10.0)},
+            couplings=[]):
         """ molecule constructor
 
         Parameters
         ----------
+        hydrogens: dict of str: (int, float)
+            Dictionary of hydrogen groups with the number of the members and their chemical shifts
+        couplings: list of (str, str, float)
+            List of J-couplings between two hydrogen groups. The last element of the tuple is the J-coupling, and the unit for it is Hz
         """ 
+
+        # molecule constructor attributes
         pass
 
 # spectrometer class
