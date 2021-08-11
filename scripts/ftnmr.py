@@ -7,6 +7,8 @@ proton gyromagnetic ratio: https://physics.nist.gov/cgi-bin/cuu/Value?gammap
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy
+from scipy.special import binom
+from itertools import product
 
 # Larmor angular frequency function
 def larmor(B=1.5, unit='MHz'):
