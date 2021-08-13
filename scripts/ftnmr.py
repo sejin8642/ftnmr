@@ -40,7 +40,10 @@ class molecule():
     ----------
 
     """
+
+    # molecule constructor
     def __init__(
+            self,
             hydrogens={'a':(1, 10.0)},
             couplings=[]):
         """ molecule constructor
@@ -48,13 +51,35 @@ class molecule():
         Parameters
         ----------
         hydrogens: dict of str: (int, float)
-            Dictionary of hydrogen groups with the number of the members and their chemical shifts
+            Dictionary of hydrogen groups with a number and a chemical shifts of the members
         couplings: list of (str, str, float)
             List of J-couplings between two hydrogen groups. The last element of the tuple is the J-coupling, and the unit for it is Hz
         """ 
+        A = list(dict.fromkeys([k for b in couplings for k in b[:-1]]))
+        B = {k:[ (b[2], hydrogens[ b[ 1-b.index(k) ] ][0]) for b in couplings if k in b] for k in A}
 
+        C0 = {k:[ [n*b/2 for n in range(-d, d+1, 2) ] for b, d in B[k]] for k in A}
+        C1 = {k:[ [binom(d, x)/pow(2,d) for x in range(0, d+1)] for b, d in B[k] ] for k in A}
+        D0 = {k:[ sum(i) for i in product(*C0[k]) ] for k in A}
+        D1 = {k:[ np.prod(i) for i in product(*C1[k]) ] for k in A}
+        E0 = {k:[ D0[k][n] for n in np.argsort(D0[k]) ] for k in A}
+        E1 = {k:[ D1[k][n] for n in np.argsort(D0[k]) ] for k in A}
+
+        ind = lambda k: filter(lambda i: not np.isclose(E0[k][i-1], E0[k][i]), range(0, len(E0[k])))
+        F0 = {k:[E0[k][i] for i in ind(k)] for k in A}
+        F1 = {k:[E1[k][i] for i in ind(k)] for k in A}
+
+        dup = lambda k: filter(lambda i: np.isclose(E0[k][i-1], E0[k][i]), range(0, len(E0[k])))
+        for k in A:
+            n = 0
+            for i in dup(k):
+                F1[k][i-1-n] += E1[k][i]
+                n += 1
+        
         # molecule constructor attributes
-        pass
+        self.hydrogens = hydrogens
+        self.couplings = couplings
+        self.splits = {k:(np.array(F0[k]), np.array(F1[k])) for k in A}
 
 # spectrometer class
 class spectrometer():
