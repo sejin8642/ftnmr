@@ -34,11 +34,20 @@ def larmor(B=1.5, unit='MHz'):
 
 # molecule class 
 class molecule(): 
-    """ Molecule class 
+    """
+    Molecule class 
+
+    This class contains hydrogen groups with the number and chemical shifts of each group.
+    Based on J-coupling constants, spectral splits with their distribution is also crated
 
     Attributes
     ----------
-
+    hydrogens: dict[str]: (int, float)
+        Dictionary of hydrogen groups with a number and a chemical shifts of the members
+    couplings: list[(str, str, float)]
+         List of J-couplings between two hydrogen groups. The last element of the tuple
+         is the J-coupling, and the unit for it is Hz
+    splits: 
     """
 
     # molecule constructor
@@ -50,10 +59,14 @@ class molecule():
 
         Parameters
         ----------
-        hydrogens: dict of str: (int, float)
+        hydrogens: dict[str]: (int, float)
             Dictionary of hydrogen groups with a number and a chemical shifts of the members
-        couplings: list of (str, str, float)
-            List of J-couplings between two hydrogen groups. The last element of the tuple is the J-coupling, and the unit for it is Hz
+            (default a:(1, 10.0))
+        couplings: list[(str, str, float)]
+            List of J-couplings between two hydrogen groups. The last element of the tuple 
+            is the J-coupling, and the unit for it is Hz (default None)
+        splits: dict[str]: (array, array)
+            Spectral splits for each hydrogen group and their probability distribution within each split
         """ 
         A = list(dict.fromkeys([k for b in couplings for k in b[:-1]]))
         B = {k:[ (b[2], hydrogens[ b[ 1-b.index(k) ] ][0]) for b in couplings if k in b] for k in A}
@@ -81,6 +94,46 @@ class molecule():
         self.couplings = couplings
         self.splits = {k:(np.array(F0[k]), np.array(F1[k])) for k in A}
 
+# sample class
+class sample():
+    """
+    NMR sample class
+
+    This class creates an NMR sample with molecules and solvent
+
+    Attributes
+    ----------
+    molecules: dict[str]: (molecule, float)
+        A dictionary of molecules with their relative abundance
+    T2: float
+        T2 of the sample
+    r: float
+        Relaxivity of the sample (1/T2)
+    timeunit: str
+        Unit for T2
+    """
+
+    # sample constructor
+    def __init__(self, molecules, T2=100.0, timeunit='msec'):
+        """ 
+        sample constructor
+
+        Parameters
+        ----------
+        molecules: dict[str]: (molecule, float)
+            A dictionary of molecules with their relative abundance
+        T2: float
+            T2 of the sample
+        timeunit: str
+            Unit for T2
+        """
+
+        # sample constructor attributes
+        self.molecules = molecules 
+        self.T2 = T2
+        self.r = 1/T2
+        self.timeunit = timeunit
+
 # spectrometer class
 class spectrometer():
     """
@@ -93,6 +146,7 @@ class spectrometer():
 
     # spectrometer constructor
     def __init__(
+            self,
             B=10.0,
             timeunit='msec',
             shift_maximum=128.0,
@@ -103,7 +157,15 @@ class spectrometer():
         ----------
 
         """
-        pass
+
+        # spectrometer constructor attributes
+        self.B = B # Approximately 2000 msec is T2 for water/CSF at 1.5T
+        self.timeunit = timeunit
+        self.shift = shift
+        self.shift_maximum = shift_maximum
+        self.f_s, self.f_l, self.frequency_unit = self.sampling_frequency(shift_maximum, B, timeunit)
+        self.dt = 1/self.f_s
+        self.ns, self.p, self.t = self.time(self.f_s, t_cut)
 
 # fid class (free induction decay for a single proton)
 class fid():
@@ -182,7 +244,7 @@ class fid():
             shift=5.0,
             T2=100):
         """ 
-        Constructor
+        fid constructor
 
         Parameters
         ----------
@@ -200,7 +262,7 @@ class fid():
             Cutoff time that the maximum t valule must exceed (default 12000.0)
         """
 
-        # fid object attributes
+        # fid constructor attributes
         self.B = B # Approximately 2000 msec is T2 for water/CSF at 1.5T
         self.timeunit = timeunit
         self.shift = shift
