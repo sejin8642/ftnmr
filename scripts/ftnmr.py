@@ -144,6 +144,9 @@ class spectrometer():
 
     """
 
+    # spectrometer class attributes
+    gamma = 267.52218744*pow(10,6)
+
     # spectrometer constructor
     def __init__(
             self,
@@ -167,6 +170,114 @@ class spectrometer():
         self.dt = 1/self.f_s
         self.ns, self.p, self.t = self.time(self.f_s, t_cut)
 
+    # spectrometer calibrate method
+    def calibrate(
+            self,
+            B=10.0,
+            timeunit='msec',
+            shift_maximum=128.0,
+            t_cut=600):
+
+        self.B = B 
+        self.timeunit = timeunit
+        self.shift = shift
+        self.shift_maximum = shift_maximum
+        self.f_s, self.f_l, self.frequency_unit = self.sampling_frequency(shift_maximum, B, timeunit)
+        self.dt = 1/self.f_s
+        self.ns, self.p, self.t = self.time(self.f_s, t_cut)
+
+    @classmethod
+    def sampling_frequency(cls, shift_maximum, b, timeunit):
+        """
+        returns sampling frequency based on the external B field and maximum chemical shift
+
+        parameters
+        ----------
+        shift_maximum: float
+            maximum chemical shift the spectrometer can observe
+        b: float
+            external magnetic field
+        timeunit: str
+            unit for time variable (either msec or micron)
+
+        returns
+        -------
+        f_s: float
+            sampling frequency or the maximum frequency of the spectrometer
+        f_l: float
+            ordinary larmor frequency
+        """
+        if timeunit == 'msec':
+            f_s = 0.5*shift_maximum*cls.gamma*b*pow(10, -9)/np.pi
+            f_l = 0.5*cls.gamma*b*pow(10, -3)/np.pi
+            return f_s, f_l, 'kHz'
+        elif timeunit == 'micron':
+            f_s = 0.5*shift_maximum*cls.gamma*b*pow(10, -12)/np.pi,
+            f_l = 0.5*cls.gamma*b*pow(10, -6)/np.pi
+            return f_s, f_l, 'MHz'
+        else:
+            raise valueerror('incorrect time unit is specified: use msec or micron')
+
+    # spectrometer measure method
+    def measure(self, sample):
+        """" 
+        Measures FID signal from the sample
+
+
+        """
+        self.f0 = self.signal_frequency(self.B, self.timeunit, shift)
+        self.nsp = 1/(self.f0*self.dt)
+        self.w = 2*np.pi*self.f0
+        self.signal = self.signal_output()
+
+    @classmethod
+    def signal_frequency(cls, B, timeunit, shift):
+        """
+        Signal frequency adjusted according to chemical shift
+
+        Parameters
+        ----------
+        B: float
+            External magnetic field
+        timeunit: str
+            Unit for time variable, t
+        shift: float
+            Chemical shift
+
+        Returns
+        -------
+        f0: float
+            Signal frequency
+
+        Raises
+        ------
+        ValueError
+            If incorrect timeunit is specified (it is either msec or micron).
+        """
+        if timeunit == 'msec':
+            return 0.5*pow(10, -9)*shift*B*cls.gamma/np.pi
+        elif timeunit == 'micron':
+            return 0.5*pow(10, -12)*shift*B*cls.gamma/np.pi
+        else:
+            raise ValueError('Incorrect time unit is specified: use msec or micron')
+
+    def signal_output(self):
+        """
+        Sampled FID signal
+
+        Returns
+        -------
+        signal: list[float]
+            FID signal
+        """
+        return np.exp(1j*self.w*self.t)*np.exp(-self.r*self.t)
+
+    def __repr__(self):
+        return "fid() [check the attributes if you wish to change the default variables]"
+
+    def __call__(self):
+        """ returns signal """ 
+        return self.signal
 # fid class (free induction decay for a single proton)
 class fid():
     """
@@ -278,37 +389,38 @@ class fid():
         self.signal = self.signal_output()
 
     @classmethod
-    def sampling_frequency(cls, shift_maximum, B, timeunit):
+    def sampling_frequency(cls, shift_maximum, b, timeunit):
         """
-        Returns sampling frequency based on the external B field and maximum chemical shift
+        returns sampling frequency based on the external b field and maximum chemical shift
 
-        Parameters
+        parameters
         ----------
         shift_maximum: float
-            Maximum chemical shift the spectrometer can observe
-        B: float
-            External magnetic field
+            maximum chemical shift the spectrometer can observe
+        b: float
+            external magnetic field
         timeunit: str
             unit for time variable (either msec or micron)
 
-        Returns
+        returns
         -------
         f_s: float
-            Sampling frequency or the maximum frequency of the spectrometer
+            sampling frequency or the maximum frequency of the spectrometer
         f_l: float
-            Ordinary Larmor frequency
+            ordinary larmor frequency
         """
         if timeunit == 'msec':
-            f_s = 0.5*shift_maximum*cls.gamma*B*pow(10, -9)/np.pi
-            f_l = 0.5*cls.gamma*B*pow(10, -3)/np.pi
-            return f_s, f_l, 'kHz'
+            f_s = 0.5*shift_maximum*cls.gamma*b*pow(10, -9)/np.pi
+            f_l = 0.5*cls.gamma*b*pow(10, -3)/np.pi
+            return f_s, f_l, 'khz'
         elif timeunit == 'micron':
-            f_s = 0.5*shift_maximum*cls.gamma*B*pow(10, -12)/np.pi,
-            f_l = 0.5*cls.gamma*B*pow(10, -6)/np.pi
-            return f_s, f_l, 'MHz'
+            f_s = 0.5*shift_maximum*cls.gamma*b*pow(10, -12)/np.pi,
+            f_l = 0.5*cls.gamma*b*pow(10, -6)/np.pi
+            return f_s, f_l, 'mhz'
         else:
-            raise ValueError('Incorrect time unit is specified: use msec or micron')
+            raise valueerror('incorrect time unit is specified: use msec or micron')
 
+    # fid signal_frequency method
     @classmethod
     def signal_frequency(cls, B, timeunit, shift):
         """
@@ -340,6 +452,7 @@ class fid():
         else:
             raise ValueError('Incorrect time unit is specified: use msec or micron')
 
+    # fid time method
     @staticmethod
     def time(f_s, t_cut):
         """
