@@ -38,7 +38,7 @@ class molecule():
     Molecule class 
 
     This class contains hydrogen groups with the number and chemical shifts of each group.
-    Based on J-coupling constants, spectral splits with their distribution is also crated
+    Based on J-coupling constants, spectral splits with their distribution is also created
 
     Attributes
     ----------
@@ -141,7 +141,43 @@ class spectrometer():
 
     Attributes
     ----------
+    B: float
+        External magnetic field
+    timeunit: str
+        Unit for time variable, t
+    shift_maximum: float
+        Maximum chemical shift the spectrometer can observer
+    dt: float
+        Sampling interval, also called timestep
+    t_cut: float
+        The minimum sampling duration
+    gamma: float
+        Gyromagnetic ratio
+    f_s: float
+        Sampling frequency
+    f_l: float
+        Ordinary Larmor frequency
+    f_unit: str
+        Unit for ordinary frequency used
+    ns: integer
+        Total number of samples
+    p: integer
+        Power of two that yields the number of samples
+    signal: list[float]
+        FID signal
 
+    Methods
+    -------
+    sampling_frequency()
+        Returns a sampling frequency
+    signal_frequency()
+        Returns an adjusted signal frequency
+    time()
+        Returns a list of sampling times and sampling rate f_s
+    signal_output()
+        Returns FID signal
+    call()
+        Returns the sampled FID signal
     """
 
     # spectrometer class attributes
@@ -158,17 +194,68 @@ class spectrometer():
 
         Parameters
         ----------
-
+        B: float
+            External magnetic field (default 1.5 Tesla) 
+        timeunit: str
+            Unit string for time variable. It is either msec or micron (default msec)
+        shift_maximum: float
+            Maximum chemical shift to set the maximum frequency (default 128.0 ppm)
+        t_cut: float
+            Cutoff time that the maximum t value must exceed (default 12000.0)
         """
 
         # spectrometer constructor attributes
         self.B = B # Approximately 2000 msec is T2 for water/CSF at 1.5T
         self.timeunit = timeunit
-        self.shift = shift
         self.shift_maximum = shift_maximum
-        self.f_s, self.f_l, self.frequency_unit = self.sampling_frequency(shift_maximum, B, timeunit)
+        self.f_unit, self.ep = self.unit(timeunit)
+        self.f_s = 0.5*shift_maximum*self.gamma*B*pow(10, self.ep-6)/np.pi
+        self.f_l = 0.5*self.gamma*B*pow(10, self.ep)/np.pi
         self.dt = 1/self.f_s
         self.ns, self.p, self.t = self.time(self.f_s, t_cut)
+
+    # spectrometer unit method
+    def unit(self, timeunit):
+        """ Unit method
+
+        Returns frequency unit and time exponent that turns seconds into miliseconds or microseconds
+        
+        Parameters
+        ----------
+        timeunit: str
+            Unit for time. It is either msec or micron
+        
+        Returns
+        -------
+        f_unit: str
+            Unit for frequency
+        exp: int
+            Exponent of 10 to convert seconds into miliseconds or microseconds
+        """
+
+        if timeunit == 'msec':
+            return 'kHz', -3
+        elif timeunit == 'micron':
+            return 'MHz', -6
+        else:
+            raise ValueError('incorrect time unit is specified: use msec or micron')
+        
+    # spectrometer time method
+    @staticmethod
+    def time(f_s, t_cut):
+        """
+        A list of times at which the signal is sampled with sampling interval and rate.
+
+        Returns
+        -------
+        t: list[float]
+            Sampled times
+        f_s: float
+            Sampling rate
+        """
+        p = int(np.log2(t_cut*f_s + 1)) + 1
+        ns = pow(2, p) # total number of samples including t = 0 
+        return ns, p, np.arange(0, ns)/f_s
 
     # spectrometer calibrate method
     def calibrate(
@@ -177,57 +264,36 @@ class spectrometer():
             timeunit='msec',
             shift_maximum=128.0,
             t_cut=600):
+        """
+        Spectrometer calibrate method
 
-        self.B = B 
+        This method will calibrate spectrometer settings to default if no inputs were provided.
+        The parameters for this method is the same as the constructor
+        """
+
+        # spectrometer calibrate attributes
+        self.B = B # Approximately 2000 msec is T2 for water/CSF at 1.5T
         self.timeunit = timeunit
-        self.shift = shift
         self.shift_maximum = shift_maximum
-        self.f_s, self.f_l, self.frequency_unit = self.sampling_frequency(shift_maximum, B, timeunit)
+        self.f_unit, self.ep = self.unit(timeunit)
+        self.f_s = 0.5*shift_maximum*self.gamma*B*pow(10, self.ep-6)/np.pi
+        self.f_l = 0.5*self.gamma*B*pow(10, self.ep)/np.pi
         self.dt = 1/self.f_s
         self.ns, self.p, self.t = self.time(self.f_s, t_cut)
-
-    @classmethod
-    def sampling_frequency(cls, shift_maximum, b, timeunit):
-        """
-        returns sampling frequency based on the external B field and maximum chemical shift
-
-        parameters
-        ----------
-        shift_maximum: float
-            maximum chemical shift the spectrometer can observe
-        b: float
-            external magnetic field
-        timeunit: str
-            unit for time variable (either msec or micron)
-
-        returns
-        -------
-        f_s: float
-            sampling frequency or the maximum frequency of the spectrometer
-        f_l: float
-            ordinary larmor frequency
-        """
-        if timeunit == 'msec':
-            f_s = 0.5*shift_maximum*cls.gamma*b*pow(10, -9)/np.pi
-            f_l = 0.5*cls.gamma*b*pow(10, -3)/np.pi
-            return f_s, f_l, 'kHz'
-        elif timeunit == 'micron':
-            f_s = 0.5*shift_maximum*cls.gamma*b*pow(10, -12)/np.pi,
-            f_l = 0.5*cls.gamma*b*pow(10, -6)/np.pi
-            return f_s, f_l, 'MHz'
-        else:
-            raise valueerror('incorrect time unit is specified: use msec or micron')
 
     # spectrometer measure method
     def measure(self, sample):
         """" 
         Measures FID signal from the sample
 
-
         """
-        self.f0 = self.signal_frequency(self.B, self.timeunit, shift)
+        if sample.timeunit != self.timeunit:
+            raise ValueError("Sample time unit does not match with spectrometer time unit")
+
+        # spectrometer measure attributes
+        self.w = pow(10, self.ep-6)*shift*self.gamma*self.B
+        self.f0 = 0.5*self.w/np.pi
         self.nsp = 1/(self.f0*self.dt)
-        self.w = 2*np.pi*self.f0
         self.signal = self.signal_output()
 
     @classmethod
@@ -278,6 +344,7 @@ class spectrometer():
     def __call__(self):
         """ returns signal """ 
         return self.signal
+
 # fid class (free induction decay for a single proton)
 class fid():
     """
