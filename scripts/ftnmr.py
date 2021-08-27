@@ -153,12 +153,14 @@ class spectrometer():
         The minimum sampling duration
     gamma: float
         Gyromagnetic ratio
+    w_l: float
+        angular Larmor frequency
     f_s: float
         Sampling frequency
-    f_l: float
-        Ordinary Larmor frequency
     f_unit: str
         Unit for ordinary frequency used
+    ex: int
+        Exponent of 10 to convert seconds into miliseconds or microseconds
     ns: integer
         Total number of samples
     p: integer
@@ -182,6 +184,7 @@ class spectrometer():
 
     # spectrometer class attributes
     gamma = 267.52218744*pow(10,6)
+    ip2 = 0.5/np.pi
 
     # spectrometer constructor
     def __init__(
@@ -189,7 +192,8 @@ class spectrometer():
             B=10.0,
             timeunit='msec',
             shift_maximum=128.0,
-            t_cut=600):
+            t_cut=600,
+            RH=12):
         """ spectrometer constructor
 
         Parameters
@@ -209,10 +213,11 @@ class spectrometer():
         self.timeunit = timeunit
         self.shift_maximum = shift_maximum
         self.f_unit, self.ep = self.unit(timeunit)
-        self.f_s = 0.5*shift_maximum*self.gamma*B*pow(10, self.ep-6)/np.pi
-        self.f_l = 0.5*self.gamma*B*pow(10, self.ep)/np.pi
+        self.w_l = self.gamma*B*pow(10, self.ep)
+        self.f_s = self.ip2*shift_maximum*pow(10, -6)*self.w_l
         self.dt = 1/self.f_s
         self.ns, self.p, self.t = self.time(self.f_s, t_cut)
+        self.hr = 1/RH
 
     # spectrometer unit method
     def unit(self, timeunit):
@@ -229,7 +234,7 @@ class spectrometer():
         -------
         f_unit: str
             Unit for frequency
-        exp: int
+        ex: int
             Exponent of 10 to convert seconds into miliseconds or microseconds
         """
 
@@ -263,7 +268,8 @@ class spectrometer():
             B=10.0,
             timeunit='msec',
             shift_maximum=128.0,
-            t_cut=600):
+            t_cut=600,
+            RH=12):
         """
         Spectrometer calibrate method
 
@@ -276,10 +282,11 @@ class spectrometer():
         self.timeunit = timeunit
         self.shift_maximum = shift_maximum
         self.f_unit, self.ep = self.unit(timeunit)
-        self.f_s = 0.5*shift_maximum*self.gamma*B*pow(10, self.ep-6)/np.pi
-        self.f_l = 0.5*self.gamma*B*pow(10, self.ep)/np.pi
+        self.w_l = self.gamma*B*pow(10, self.ep)
+        self.f_s = self.ip2*shift_maximum*pow(10, -6)*self.w_l
         self.dt = 1/self.f_s
         self.ns, self.p, self.t = self.time(self.f_s, t_cut)
+        self.hr = 1/RH
 
     # spectrometer measure method
     def measure(self, sample):
@@ -290,11 +297,26 @@ class spectrometer():
         if sample.timeunit != self.timeunit:
             raise ValueError("Sample time unit does not match with spectrometer time unit")
 
+        moles = sample.molecules
+        A = [(
+            moles[x][0].hydrogens[y][1]*pow(10, -6)*self.w_l,
+            moles[x][1]*moles[x][0].hydrogens[y][0]*self.hr)
+            for x in moles for y in moles[x][0].hydrogens if y not in moles[x][0].splits] \
+        +   [(
+            pow(10, -6)*moles[x][0].hydrogens[y][1]*self.w_l + 2*pow(10, self.ep)*np.pi*z,
+            moles[x][1]*moles[x][0].hydrogens[y][0]*k*self.hr)
+            for x in moles for y in moles[x][0].splits
+            for z, k in zip(moles[x][0].splits[y][0], moles[x][0].splits[y][1])]
+        
+        self.A = A
+        C = [sample.r*self.dt*N*np.exp(1j*w*self.t)*np.exp(-sample.r*self.t) for w, N in A] 
+        self.C = C
+
         # spectrometer measure attributes
-        self.w = pow(10, self.ep-6)*shift*self.gamma*self.B
-        self.f0 = 0.5*self.w/np.pi
-        self.nsp = 1/(self.f0*self.dt)
-        self.signal = self.signal_output()
+        #self.w = pow(10, self.ep-6)*shift*self.w_l
+        #self.f0 = self.ip2*self.w
+        #self.nsp = 1/(self.f0*self.dt)
+        #self.signal = self.signal_output()
 
     @classmethod
     def signal_frequency(cls, B, timeunit, shift):
