@@ -165,6 +165,8 @@ class spectrometer():
         Total number of samples
     p: integer
         Power of two that yields the number of samples
+    p_h: integer
+        Extra power of two that yields the number of samples. It is used for high resolution NMR
     signal: list[float]
         FID signal
 
@@ -193,6 +195,7 @@ class spectrometer():
             timeunit='msec',
             shift_maximum=128.0,
             t_cut=600,
+            f_min=0.2,
             RH=12):
         """ spectrometer constructor
 
@@ -206,6 +209,8 @@ class spectrometer():
             Maximum chemical shift to set the maximum frequency (default 128.0 ppm)
         t_cut: float
             Cutoff time that the maximum t value must exceed (default 12000.0)
+        f_h: float
+            Maximum frequency (in Hz) resolution for high resolution NMR (default 0.2 Hz)
         """
 
         # spectrometer constructor attributes
@@ -216,7 +221,7 @@ class spectrometer():
         self.w_l = self.gamma*B*pow(10, self.ep)
         self.f_s = self.ip2*shift_maximum*pow(10, -6)*self.w_l
         self.dt = 1/self.f_s
-        self.ns, self.p, self.t = self.time(self.f_s, t_cut)
+        self.ns, self.p, self.p_h, self.t = self.time(t_cut, f_min)
         self.hr = 1/RH
 
     # spectrometer unit method
@@ -246,8 +251,7 @@ class spectrometer():
             raise ValueError('incorrect time unit is specified: use msec or micron')
         
     # spectrometer time method
-    @staticmethod
-    def time(f_s, t_cut):
+    def time(self, t_cut, f_min):
         """
         A list of times at which the signal is sampled with sampling interval and rate.
 
@@ -258,9 +262,10 @@ class spectrometer():
         f_s: float
             Sampling rate
         """
-        p = int(np.log2(t_cut*f_s + 1)) + 1
+        p = int(np.log2(t_cut*self.f_s + 1)) + 1
         ns = pow(2, p) # total number of samples including t = 0 
-        return ns, p, np.arange(0, ns)/f_s
+        p_h = int(np.log2(self.f_s*pow(10, -self.ep)/(ns*f_min))) + 1
+        return ns, p, p_h, np.arange(0, ns)/self.f_s
 
     # spectrometer calibrate method
     def calibrate(
@@ -269,6 +274,7 @@ class spectrometer():
             timeunit='msec',
             shift_maximum=128.0,
             t_cut=600,
+            f_min=0.2,
             RH=12):
         """
         Spectrometer calibrate method
@@ -285,7 +291,7 @@ class spectrometer():
         self.w_l = self.gamma*B*pow(10, self.ep)
         self.f_s = self.ip2*shift_maximum*pow(10, -6)*self.w_l
         self.dt = 1/self.f_s
-        self.ns, self.p, self.t = self.time(self.f_s, t_cut)
+        self.ns, self.p, self.p_h, self.t = self.time(t_cut, f_min)
         self.hr = 1/RH
 
     # spectrometer measure method
