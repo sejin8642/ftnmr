@@ -147,28 +147,44 @@ class spectrometer():
         Unit for time variable, t
     shift_maximum: float
         Maximum chemical shift the spectrometer can observer
-    dt: float
-        Sampling interval, also called timestep
-    t_cut: float
-        The minimum sampling duration
-    gamma: float
-        Gyromagnetic ratio
+    p_l: int
+        Power of two to narrow the frequency range of the processed signal
+    shift_cutoff: float
+        Highest shift of the frequency domain for the FFT
+    f_unit: str
+        Unit for ordinary frequency used
+    ep: int
+        Exponent of 10 to convert seconds into miliseconds or microseconds
     w_l: float
         angular Larmor frequency
     f_s: float
         Sampling frequency
-    f_unit: str
-        Unit for ordinary frequency used
-    ex: int
-        Exponent of 10 to convert seconds into miliseconds or microseconds
+    dt: float
+        Sampling interval, also called timestep
+    gamma: float
+        Gyromagnetic ratio
     ns: integer
-        Total number of samples
+        Total number of signal samples (different from the number of FFT output)
     p: integer
-        Power of two that yields the number of samples
-    p_h: integer
-        Extra power of two that yields the number of samples. It is used for high resolution NMR
-    signal: list[float]
-        FID signal
+        Power of two that yields the number of processed data points 
+    t: numpy array[float]
+        Times at which signal is sampled
+    df: float
+        Frequency resolution
+    nf: int
+        Number of FFT output
+    f: numpy array[float]
+        Frequency domain for FFT output
+    shift: numpy array[float]
+        Chemical shift doamin for FFT output
+    hr: float
+        One over number of hydrogens of the reference molecule, usually TMS which has 12 hydrogens
+    splits: list[tuple(float, float)]
+        List of angular Larmor frequencies and relative abundances for sample molecules
+    signal: numpy array[compelx float]
+        NMR sample signal
+    spectra: numpy array[complex float]
+        FFT output of the signal
 
     Methods
     -------
@@ -194,7 +210,8 @@ class spectrometer():
             B=10.0,
             timeunit='msec',
             shift_maximum=128.0,
-            t_cut=600,
+            shift_minimum=15,
+            t_cut=1500,
             f_min=0.2,
             RH=12):
         """ spectrometer constructor
@@ -207,21 +224,31 @@ class spectrometer():
             Unit string for time variable. It is either msec or micron (default msec)
         shift_maximum: float
             Maximum chemical shift to set the maximum frequency (default 128.0 ppm)
+        shift_minimum: float
+            Minimum chemical shift that the frequency range must include (default 15.0)
         t_cut: float
-            Cutoff time that the maximum t value must exceed (default 12000.0)
-        f_h: float
-            Maximum frequency (in Hz) resolution for high resolution NMR (default 0.2 Hz)
+            Cutoff time that the maximum t value must exceed (default 1500.0)
+        f_min: float
+            Minimum frequency resolution for high resolution NMR spectrum (default 0.2 Hz)
+        RH: integer
+            Number of hydrogens the reference molecule contains (default 12)
         """
 
         # spectrometer constructor attributes
         self.B = B # Approximately 2000 msec is T2 for water/CSF at 1.5T
         self.timeunit = timeunit
         self.shift_maximum = shift_maximum
+        self.p_l = int(np.log2(shift_maximum/shift_minimum))
+        self.shift_cutoff = shift_maximum*pow(2, -self.p_l)
         self.f_unit, self.ep = self.unit(timeunit)
         self.w_l = self.gamma*B*pow(10, self.ep)
         self.f_s = self.ip2*shift_maximum*pow(10, -6)*self.w_l
         self.dt = 1/self.f_s
-        self.ns, self.p, self.p_h, self.t = self.time(t_cut, f_min)
+        self.ns, self.p, self.t = self.time(t_cut, f_min)
+        self.df = self.f_s*pow(2, -self.p)
+        self.nf = pow(2, self.p-self.p_l)
+        self.f = self.df*np.arange(0, self.nf)
+        self.shift = (self.shift_cutoff/self.nf)*np.arange(0, self.nf)
         self.hr = 1/RH
 
     # spectrometer unit method
@@ -257,15 +284,18 @@ class spectrometer():
 
         Returns
         -------
-        t: list[float]
+        ns: integer
+            Number of signal samples
+        p: integer
+            Power of two data points for sampled signal to be processed before clipping at
+            cutoff chemical shift (usually more than ns, thus zero padding occurs)
+        t: numpy array[float]
             Sampled times
-        f_s: float
-            Sampling rate
         """
         p = int(np.log2(t_cut*self.f_s + 1)) + 1
-        ns = pow(2, p) # total number of samples including t = 0 
-        p_h = int(np.log2(self.f_s*pow(10, -self.ep)/(ns*f_min))) + 1
-        return ns, p, p_h, np.arange(0, ns)/self.f_s
+        ns = pow(2, p) # total number of signal samples including t = 0 
+        p += int(np.log2(self.f_s*pow(10, -self.ep)/(ns*f_min))) + 1
+        return ns, p, np.arange(0, ns)/self.f_s
 
     # spectrometer calibrate method
     def calibrate(
@@ -273,36 +303,39 @@ class spectrometer():
             B=10.0,
             timeunit='msec',
             shift_maximum=128.0,
-            t_cut=600,
+            shift_minimum=15,
+            t_cut=1500,
             f_min=0.2,
             RH=12):
         """
         Spectrometer calibrate method
 
         This method will calibrate spectrometer settings to default if no inputs were provided.
-        The parameters for this method is the same as the constructor
+        It is essentially __init__. The parameters for this method is the same as the constructor
         """
-
-        # spectrometer calibrate attributes
-        self.B = B # Approximately 2000 msec is T2 for water/CSF at 1.5T
-        self.timeunit = timeunit
-        self.shift_maximum = shift_maximum
-        self.f_unit, self.ep = self.unit(timeunit)
-        self.w_l = self.gamma*B*pow(10, self.ep)
-        self.f_s = self.ip2*shift_maximum*pow(10, -6)*self.w_l
-        self.dt = 1/self.f_s
-        self.ns, self.p, self.p_h, self.t = self.time(t_cut, f_min)
-        self.hr = 1/RH
+        self.__init__(
+                B=B,
+                timeunit=timeunit,
+                shift_maximum=shift_maximum,
+                shift_minimum=shift_minimum,
+                t_cut=t_cut,
+                f_min=f_min,
+                RH=RH)
 
     # spectrometer measure method
     def measure(self, sample):
         """" 
         Measures FID signal from the sample
-
+        
+        Parameter
+        ---------
+        sample: sample object
+            Sample object that contains molecules and T2, r, and timeunit
         """
         if sample.timeunit != self.timeunit:
             raise ValueError("Sample time unit does not match with spectrometer time unit")
 
+        # Obtains split frequencies and their relative abundance (relative to RH)
         moles = sample.molecules
         A = [(
             moles[x][0].hydrogens[y][1]*pow(10, -6)*self.w_l,
@@ -314,64 +347,25 @@ class spectrometer():
             for x in moles for y in moles[x][0].splits
             for z, k in zip(moles[x][0].splits[y][0], moles[x][0].splits[y][1])]
         
-        self.A = A
-        C = [sample.r*self.dt*N*np.exp(1j*w*self.t)*np.exp(-sample.r*self.t) for w, N in A] 
-        self.C = C
-
-        # spectrometer measure attributes
-        #self.w = pow(10, self.ep-6)*shift*self.w_l
-        #self.f0 = self.ip2*self.w
-        #self.nsp = 1/(self.f0*self.dt)
-        #self.signal = self.signal_output()
-
-    @classmethod
-    def signal_frequency(cls, B, timeunit, shift):
+        # Final signal from all hydrogen FID
+        self.splits = A
+        amplitude = sample.r*self.dt
+        separate_fid = [amplitude*N*np.exp(1j*w*self.t)*np.exp(-sample.r*self.t) for w, N in A] 
+        self.signal = np.sum(separate_fid, axis=0)
+         
+    def process(self):
+        """ 
+        Process the obtained signal by FFT
         """
-        Signal frequency adjusted according to chemical shift
 
-        Parameters
-        ----------
-        B: float
-            External magnetic field
-        timeunit: str
-            Unit for time variable, t
-        shift: float
-            Chemical shift
-
-        Returns
-        -------
-        f0: float
-            Signal frequency
-
-        Raises
-        ------
-        ValueError
-            If incorrect timeunit is specified (it is either msec or micron).
-        """
-        if timeunit == 'msec':
-            return 0.5*pow(10, -9)*shift*B*cls.gamma/np.pi
-        elif timeunit == 'micron':
-            return 0.5*pow(10, -12)*shift*B*cls.gamma/np.pi
-        else:
-            raise ValueError('Incorrect time unit is specified: use msec or micron')
-
-    def signal_output(self):
-        """
-        Sampled FID signal
-
-        Returns
-        -------
-        signal: list[float]
-            FID signal
-        """
-        return np.exp(1j*self.w*self.t)*np.exp(-self.r*self.t)
+        # TODO
+        self.spectra = np.fft.fft(self.signal, n=pow(2, self.p))[:len(self.f)]
 
     def __repr__(self):
         return "fid() [check the attributes if you wish to change the default variables]"
 
     def __call__(self):
-        """ returns signal """ 
-        return self.signal
+        return self.spectra
 
 # fid class (free induction decay for a single proton)
 class fid():
