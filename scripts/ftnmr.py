@@ -352,20 +352,16 @@ class spectrometer():
         amplitude = sample.r*self.dt
         separate_fid = [amplitude*N*np.exp(1j*w*self.t)*np.exp(-sample.r*self.t) for w, N in A] 
         self.signal = np.sum(separate_fid, axis=0)
-         
-    def process(self):
-        """ 
-        Process the obtained signal by FFT
-        """
-
-        # TODO
         self.spectra = np.fft.fft(self.signal, n=pow(2, self.p))[:len(self.f)]
 
     def __repr__(self):
-        return "fid() [check the attributes if you wish to change the default variables]"
+        return "Spectrometer class that measures a sample solution with organic molecules in it"
 
     def __call__(self):
-        return self.spectra
+        try:
+            return self.spectra
+        except AttributeError:
+            return None
 
 # fid class (free induction decay for a single proton)
 class fid():
