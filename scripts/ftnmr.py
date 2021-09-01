@@ -179,6 +179,8 @@ class spectrometer():
         Chemical shift doamin for FFT output
     hr: float
         One over number of hydrogens of the reference molecule, usually TMS which has 12 hydrogens
+    std: float
+        Standard deviation of signal noise
     noise: complex float
         Signal noise
     splits: list[tuple(float, float)]
@@ -216,7 +218,7 @@ class spectrometer():
             t_cut=1500,
             f_min=0.2,
             RH=12,
-            sd=0.00001):
+            std=0.00001):
         """ spectrometer constructor
 
         Parameters
@@ -235,7 +237,7 @@ class spectrometer():
             Minimum frequency resolution for high resolution NMR spectrum (default 0.2 Hz)
         RH: integer
             Number of hydrogens the reference molecule contains (default 12)
-        sd: float
+        std: float
             Standard deviation of signal noise
         """
 
@@ -255,7 +257,8 @@ class spectrometer():
         self.f = self.df*np.arange(0, self.nf)
         self.shift = (self.shift_cutoff/self.nf)*np.arange(0, self.nf)
         self.hr = 1/RH
-        self.noise = np.random.normal(0, sd, self.ns) + 1j*np.random.normal(0, sd, self.ns)
+        self.std = std
+        self.noise = np.random.normal(0, std, self.ns) + 1j*np.random.normal(0, std, self.ns)
 
     # spectrometer unit method
     def unit(self, timeunit):
@@ -312,7 +315,8 @@ class spectrometer():
             shift_minimum=15,
             t_cut=1500,
             f_min=0.2,
-            RH=12):
+            RH=12,
+            std=0.00001):
         """
         Spectrometer calibrate method
 
@@ -326,7 +330,8 @@ class spectrometer():
                 shift_minimum=shift_minimum,
                 t_cut=t_cut,
                 f_min=f_min,
-                RH=RH)
+                RH=RH,
+                std=std)
 
     # spectrometer artifact method
     def artifact(self):
