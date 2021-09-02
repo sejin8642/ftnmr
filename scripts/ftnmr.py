@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 import scipy
 from scipy.special import binom
 from itertools import product
+from scipy.stats import truncnorm
+from scipy import interpolate
 
 # Larmor angular frequency function
 def larmor(B=1.5, unit='MHz'):
@@ -187,8 +189,12 @@ class spectrometer():
         List of angular Larmor frequencies and relative abundances for sample molecules
     signal: numpy array[compelx float]
         NMR sample signal
-    spectra: numpy array[complex float]
+    FFT: numpy array[complex float]
         FFT output of the signal
+    spectra: numpy array[complex float]
+        NMR spectra output with the artifact and noise
+    spectra_artifact: numpy array[float]
+        Spectra artifact
 
     Methods
     -------
@@ -334,18 +340,41 @@ class spectrometer():
                 std=std)
 
     # spectrometer artifact method
-    def artifact(self):
+    def artifact(self, baseline=False):
         """
         Artifact method
 
+        For now, only baseline distortion artifact is implemented
         Parameters
         ----------
+        Baseline: Bool
+            If true, baseline distortion artifact is created
 
         Returns
         -------
-
+        splev: numpy array[float]
+            Linear or spline interpolation for baselinse distortion artifact
         """
-        pass
+        
+        self.spectra_artifact = np.zeros(self.nf)
+        if baseline:
+            n = np.random.randint(2, 11)
+            y = np.random.uniform(0.1, 0.6, n+1)
+            if n < 3: 
+                (y[-1] - y[0])/self.shift_cutoff*spec.shift + y[0]
+
+            if 2 < n:
+                bin_size = self.shift_cutoff/n
+                std = bin_size/10
+                b = 0.5*bin_size/std
+                x = np.array(
+                        [0]+
+                        [truncnorm(-b, b, loc=bin_size*mu, scale=std).rvs(1)[0] for mu in range(1, n)]+
+                        [self.shift_cutoff])
+                tck = interpolate.splrep(x, y, s=0)
+                self.spectra_artifact += interpolate.splev(self.shift, tck, der=0)
+            else: 
+                self.spectra_artifact += ( (y[-1] - y[0])/self.shift_cutoff*spec.shift + y[0] )
 
     # spectrometer measure method
     def measure(self, sample):
@@ -377,7 +406,8 @@ class spectrometer():
         amplitude = sample.r*self.dt
         separate_fid = [amplitude*N*np.exp(1j*w*self.t)*np.exp(-sample.r*self.t) for w, N in A] 
         self.signal = np.sum(separate_fid, axis=0) + self.noise
-        self.spectra = np.fft.fft(self.signal, n=pow(2, self.p))[:len(self.f)]
+        self.FFT = np.fft.fft(self.signal, n=pow(2, self.p))[:len(self.f)]
+        self.spectra = self.FFT + self.spectra_artifact
 
     def __repr__(self):
         return "Spectrometer class that measures a sample solution with organic molecules in it"
