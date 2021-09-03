@@ -224,7 +224,7 @@ class spectrometer():
             t_cut=1500,
             f_min=0.2,
             RH=12,
-            std=0.00001):
+            std=0.00005):
         """ spectrometer constructor
 
         Parameters
@@ -322,7 +322,7 @@ class spectrometer():
             t_cut=1500,
             f_min=0.2,
             RH=12,
-            std=0.00001):
+            std=0.00005):
         """
         Spectrometer calibrate method
 
@@ -355,11 +355,14 @@ class spectrometer():
         splev: numpy array[float]
             Linear or spline interpolation for baselinse distortion artifact
         """
-        
         self.spectra_artifact = np.zeros(self.nf)
+
         if baseline:
             n = np.random.randint(2, 11)
-            y = np.random.uniform(0.1, 0.6, n+1)
+            sd = 0.15
+            w = 0.3/sd
+            upper_bound = truncnorm(-w, w, loc=0.3, scale=sd).rvs(1)[0]
+            y = np.random.uniform(0.0, upper_bound, n+1)
             if n < 3: 
                 (y[-1] - y[0])/self.shift_cutoff*spec.shift + y[0]
 
