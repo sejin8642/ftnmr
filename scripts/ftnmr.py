@@ -34,7 +34,7 @@ def larmor(B=1.5, unit='MHz'):
     else:
         raise ValueError("Frequency unit must be either MHz or kHz")
 
-# molecule Class 
+# molecule class 
 class molecule(): 
     """
     Molecule class 
@@ -95,46 +95,6 @@ class molecule():
         self.hydrogens = hydrogens
         self.couplings = couplings
         self.splits = {k:(np.array(F0[k]), np.array(F1[k])) for k in A}
-
-# sample Class
-class sample():
-    """
-    NMR sample class
-
-    This class creates an NMR sample with molecules and solvent
-
-    Attributes
-    ----------
-    molecules: dict[str]: (molecule, float)
-        A dictionary of molecules with their relative abundance
-    T2: float
-        T2 of the sample
-    r: float
-        Relaxivity of the sample (1/T2)
-    timeunit: str
-        Unit for T2
-    """
-
-    # sample constructor
-    def __init__(self, molecules, T2=100.0, timeunit='msec'):
-        """ 
-        sample constructor
-
-        Parameters
-        ----------
-        molecules: dict[str]: (molecule, float)
-            A dictionary of molecules with their relative abundance
-        T2: float
-            T2 of the sample
-        timeunit: str
-            Unit for T2
-        """
-
-        # sample constructor attributes
-        self.molecules = molecules 
-        self.T2 = T2
-        self.r = 1/T2
-        self.timeunit = timeunit
 
 # spectrometer Class
 class spectrometer():
@@ -358,15 +318,12 @@ class spectrometer():
         self.spectra_artifact = np.zeros(self.nf)
 
         if baseline:
-            n = np.random.randint(2, 11)
+            n = np.random.randint(2, 25)
             sd = 0.15
             w = 0.3/sd
             upper_bound = truncnorm(-w, w, loc=0.3, scale=sd).rvs(1)[0]
             y = np.random.uniform(0.0, upper_bound, n+1)
-            if n < 3: 
-                (y[-1] - y[0])/self.shift_cutoff*spec.shift + y[0]
-
-            if 2 < n:
+            if (2 < n) and (n < 21):
                 bin_size = self.shift_cutoff/n
                 std = bin_size/10
                 b = 0.5*bin_size/std
@@ -377,37 +334,37 @@ class spectrometer():
                 tck = interpolate.splrep(x, y, s=0)
                 self.spectra_artifact += interpolate.splev(self.shift, tck, der=0)
             else: 
-                self.spectra_artifact += ( (y[-1] - y[0])/self.shift_cutoff*spec.shift + y[0] )
+                self.spectra_artifact += ( (y[-1] - y[0])/self.shift_cutoff*self.shift + y[0] )
 
     # spectrometer measure method
-    def measure(self, sample):
+    def measure(self, moles):
         """" 
         Measures FID signal from the sample
         
         Parameter
         ---------
-        sample: sample object
+        moles: dict[str]:(molecule, float)
             Sample object that contains molecules and T2, r, and timeunit
         """
-        if sample.timeunit != self.timeunit:
-            raise ValueError("Sample time unit does not match with spectrometer time unit")
 
         # Split frequencies and their relative abundance (relative to RH)
-        moles = sample.molecules
+        relaxivity = {x:{y: 1/moles[x][0].hydrogens[y][2] for y in moles[x][0].hydrogens} 
+                     for x in moles}
         A = [(
             moles[x][0].hydrogens[y][1]*pow(10, -6)*self.w_l,
-            moles[x][1]*moles[x][0].hydrogens[y][0]*self.hr)
+            moles[x][1]*moles[x][0].hydrogens[y][0]*self.hr,
+            relaxivity[x][y])
             for x in moles for y in moles[x][0].hydrogens if y not in moles[x][0].splits] \
         +   [(
             pow(10, -6)*moles[x][0].hydrogens[y][1]*self.w_l + 2*pow(10, self.ep)*np.pi*z,
-            moles[x][1]*moles[x][0].hydrogens[y][0]*k*self.hr)
+            moles[x][1]*moles[x][0].hydrogens[y][0]*k*self.hr,
+            relaxivity[x][y])
             for x in moles for y in moles[x][0].splits
             for z, k in zip(moles[x][0].splits[y][0], moles[x][0].splits[y][1])]
-        
+       
         # Final signal and its spectra (FFT of signal) from all hydrogen FID
         self.splits = A
-        amplitude = sample.r*self.dt
-        separate_fid = [amplitude*N*np.exp(1j*w*self.t)*np.exp(-sample.r*self.t) for w, N in A] 
+        separate_fid = [self.dt*r*N*np.exp(1j*w*self.t)*np.exp(-r*self.t) for w, N, r in A] 
         self.signal = np.sum(separate_fid, axis=0) + self.noise
         self.FFT = np.fft.fft(self.signal, n=pow(2, self.p))[:len(self.f)]
         self.spectra = self.FFT + self.spectra_artifact
