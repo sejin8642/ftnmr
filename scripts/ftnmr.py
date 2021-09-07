@@ -224,7 +224,6 @@ class spectrometer():
         self.shift = (self.shift_cutoff/self.nf)*np.arange(0, self.nf)
         self.hr = 1/RH
         self.std = std
-        self.noise = np.random.normal(0, std, self.ns) + 1j*np.random.normal(0, std, self.ns)
 
     # spectrometer unit method
     def unit(self, timeunit):
@@ -337,19 +336,23 @@ class spectrometer():
                 self.spectra_artifact += ( (y[-1] - y[0])/self.shift_cutoff*self.shift + y[0] )
 
     # spectrometer measure method
-    def measure(self, moles):
+    def measure(self, moles, noise=True):
         """" 
         Measures FID signal from the sample
         
         Parameter
         ---------
+        noise: bool
+            If true, noise is introduced with std
         moles: dict[str]:(molecule, float)
             Sample object that contains molecules and T2, r, and timeunit
         """
 
-        # Split frequencies and their relative abundance (relative to RH)
+        # relaxivities for corresponding hydrogen groups
         relaxivity = {x:{y: 1/moles[x][0].hydrogens[y][2] for y in moles[x][0].hydrogens} 
                      for x in moles}
+
+        # Split frequencies and their relative abundance (relative to RH)
         A = [(
             moles[x][0].hydrogens[y][1]*pow(10, -6)*self.w_l,
             moles[x][1]*moles[x][0].hydrogens[y][0]*self.hr,
@@ -365,8 +368,14 @@ class spectrometer():
         # Final signal and its spectra (FFT of signal) from all hydrogen FID
         self.splits = A
         separate_fid = [self.dt*r*N*np.exp(1j*w*self.t)*np.exp(-r*self.t) for w, N, r in A] 
+
+        self.noise = np.zeros(self.ns, dtype=np.complex128)
+        if noise:
+            self.noise += np.random.normal(0, self.std, self.ns)+ \
+                          1j*np.random.normal(0, self.std, self.ns)
+
         self.signal = np.sum(separate_fid, axis=0) + self.noise
-        self.FFT = np.fft.fft(self.signal, n=pow(2, self.p))[:len(self.f)]
+        self.FFT = np.fft.fft(self.signal, n=pow(2, self.p))[:self.nf]
         self.spectra = self.FFT + self.spectra_artifact
 
     def __repr__(self):
