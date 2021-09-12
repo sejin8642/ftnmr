@@ -141,6 +141,8 @@ class spectrometer():
         Chemical shift doamin for FFT output
     hr: float
         One over number of hydrogens of the reference molecule, usually TMS which has 12 hydrogens
+    r: float
+        Relaxivity for reference hydrogen
     std: float
         Standard deviation of signal noise
     noise: complex float
@@ -184,7 +186,8 @@ class spectrometer():
             t_cut=1500,
             f_min=0.2,
             RH=12,
-            std=0.00005):
+            r=0.005,
+            std=0.00001):
         """ spectrometer constructor
 
         Parameters
@@ -203,6 +206,8 @@ class spectrometer():
             Minimum frequency resolution for high resolution NMR spectrum (default 0.2 Hz)
         RH: integer
             Number of hydrogens the reference molecule contains (default 12)
+        r: float
+            Relaxivity for reference hydrogen (default 0.005)
         std: float
             Standard deviation of signal noise
         """
@@ -223,6 +228,7 @@ class spectrometer():
         self.f = self.df*np.arange(0, self.nf)
         self.shift = (self.shift_cutoff/self.nf)*np.arange(0, self.nf)
         self.hr = 1/RH
+        self.r = r
         self.std = std
 
     # spectrometer unit method
@@ -304,6 +310,7 @@ class spectrometer():
         Artifact method
 
         For now, only baseline distortion artifact is implemented
+
         Parameters
         ----------
         Baseline: Bool
@@ -367,14 +374,14 @@ class spectrometer():
        
         # Final signal and its spectra (FFT of signal) from all hydrogen FID
         self.splits = A
-        separate_fid = [self.dt*r*N*np.exp(1j*w*self.t)*np.exp(-r*self.t) for w, N, r in A] 
+        separate_fid = [N*np.exp(1j*w*self.t)*np.exp(-r*self.t) for w, N, r in A] 
 
         self.noise = np.zeros(self.ns, dtype=np.complex128)
         if noise:
             self.noise += np.random.normal(0, self.std, self.ns)+ \
                           1j*np.random.normal(0, self.std, self.ns)
 
-        self.signal = np.sum(separate_fid, axis=0) + self.noise
+        self.signal = self.dt*self.r*np.sum(separate_fid, axis=0) + self.noise
         self.FFT = np.fft.fft(self.signal, n=pow(2, self.p))[:self.nf]
         self.spectra = self.FFT + self.spectra_artifact
 
