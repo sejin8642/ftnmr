@@ -292,7 +292,7 @@ class spectrometer():
         Spectrometer calibrate method
 
         This method will calibrate spectrometer settings to default if no inputs were provided.
-        It is essentially __init__. The parameters for this method is the same as the constructor
+        It is essentially __init__. The parameters for this method are the same as the constructor
         """
         self.__init__(
                 B=B,
