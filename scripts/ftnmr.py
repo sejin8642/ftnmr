@@ -39,31 +39,33 @@ class molecule():
     """
     Molecule class 
 
-    This class contains hydrogen groups with the number and chemical shifts of each group.
+    This class contains hydrogen groups with the total number and chemical shift of each group.
     Based on J-coupling constants, spectral splits with their distribution is also created
 
     Attributes
     ----------
     hydrogens: dict[str]: (int, float)
-        Dictionary of hydrogen groups with a number and a chemical shifts of the members
+        Dictionary of hydrogen groups with the total number and the chemical shifts of 
+        the members for each group (default a:(1, 10.0))
     couplings: list[(str, str, float)]
          List of J-couplings between two hydrogen groups. The last element of the tuple
          is the J-coupling, and the unit for it is Hz
-    splits: 
+    splits: dict[str]: (array, array)
+        Spectral splits for each hydrogen group and their probability distribution within each split
     """
 
     # molecule constructor
     def __init__(
             self,
-            hydrogens={'a':(1, 10.0)},
+            hydrogens={'a':(12, 0.0)},
             couplings=[]):
         """ molecule constructor
 
         Parameters
         ----------
         hydrogens: dict[str]: (int, float)
-            Dictionary of hydrogen groups with a number and a chemical shifts of the members
-            (default a:(1, 10.0))
+            Dictionary of hydrogen groups with the total number and the chemical shifts of 
+            the members for each group (default TMS a:(12, 0.0))
         couplings: list[(str, str, float)]
             List of J-couplings between two hydrogen groups. The last element of the tuple 
             is the J-coupling, and the unit for it is Hz (default None)
