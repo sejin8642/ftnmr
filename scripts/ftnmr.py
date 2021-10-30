@@ -44,9 +44,9 @@ class molecule():
 
     Attributes
     ----------
-    hydrogens: dict[str]: (int, float)
-        Dictionary of hydrogen groups with the total number and the chemical shifts of 
-        the members for each group (default a:(1, 10.0))
+    hydrogens: dict[str]: (int, float, float)
+        Dictionary of hydrogen groups with the total number, chemical shifts, T2 of 
+        the members for each group (default TMS a:(12, 0.0, 150.0))
     couplings: list[(str, str, float)]
          List of J-couplings between two hydrogen groups. The last element of the tuple
          is the J-coupling, and the unit for it is Hz
@@ -57,15 +57,15 @@ class molecule():
     # molecule constructor
     def __init__(
             self,
-            hydrogens={'a':(12, 0.0)},
+            hydrogens={'a':(12, 0.0, 150.0)},
             couplings=[]):
         """ molecule constructor
 
         Parameters
         ----------
-        hydrogens: dict[str]: (int, float)
-            Dictionary of hydrogen groups with the total number and the chemical shifts of 
-            the members for each group (default TMS a:(12, 0.0))
+        hydrogens: dict[str]: (int, float, float)
+            Dictionary of hydrogen groups with the total number, chemical shifts, T2 of 
+            the members for each group (default TMS a:(12, 0.0, 150.0))
         couplings: list[(str, str, float)]
             List of J-couplings between two hydrogen groups. The last element of the tuple 
             is the J-coupling, and the unit for it is Hz (default None)
@@ -351,10 +351,10 @@ class spectrometer():
         
         Parameter
         ---------
-        noise: bool
-            If true, noise is introduced with std
         moles: dict[str]:(molecule, float)
             Sample object that contains molecules and T2, r, and timeunit
+        noise: bool
+            If true, noise is introduced with std
         """
 
         # relaxivities for corresponding hydrogen groups
