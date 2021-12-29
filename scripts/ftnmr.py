@@ -46,7 +46,8 @@ class molecule():
     ----------
     hydrogens: dict[str]: (int, float, float)
         Dictionary of hydrogen groups with the total number, chemical shifts, T2 of 
-        the members for each group (default TMS a:(12, 0.0, 150.0))
+        the members for each group (default TMS a:(12, 0.0, 150.0)). The default unit for
+        T2 is msec
     couplings: list[(str, str, float)]
          List of J-couplings between two hydrogen groups. The last element of the tuple
          is the J-coupling, and the unit for it is Hz
@@ -65,7 +66,8 @@ class molecule():
         ----------
         hydrogens: dict[str]: (int, float, float)
             Dictionary of hydrogen groups with the total number, chemical shifts, T2 of 
-            the members for each group (default TMS a:(12, 0.0, 150.0))
+            the members for each group (default TMS a:(12, 0.0, 150.0)). The default unit for
+            T2 is msec
         couplings: list[(str, str, float)]
             List of J-couplings between two hydrogen groups. The last element of the tuple 
             is the J-coupling, and the unit for it is Hz (default None)
@@ -294,7 +296,7 @@ class spectrometer():
         Spectrometer calibrate method
 
         This method will calibrate spectrometer settings to default if no inputs were provided.
-        It is essentially __init__. The parameters for this method are the same as the constructor
+        It is essentially __init__. Parameters for this method are the same as the constructor
         """
         self.__init__(
                 B=B,
@@ -339,6 +341,9 @@ class spectrometer():
                         [0]+
                         [truncnorm(-b, b, loc=bin_size*mu, scale=std).rvs(1)[0] for mu in range(1, n)]+
                         [self.shift_cutoff])
+        hydrogens: dict[str]: (int, float, float)
+            Dictionary of hydrogen groups with the total number, chemical shifts, T2 of 
+            the members for each group (default TMS a:(12, 0.0, 150.0))
                 tck = interpolate.splrep(x, y, s=0)
                 self.spectra_artifact += interpolate.splev(self.shift, tck, der=0)
             else: 
