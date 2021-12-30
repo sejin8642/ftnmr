@@ -191,7 +191,7 @@ class spectrometer():
             f_min=0.2,
             RH=12,
             r=0.005,
-            std=0.00001):
+            std=0.0001):
         """ spectrometer constructor
 
         Parameters
@@ -213,7 +213,7 @@ class spectrometer():
         r: float
             Relaxivity for reference hydrogen (default 0.005)
         std: float
-            Standard deviation of signal noise
+            Standard deviation of signal noise (default 0.0001)
         """
 
         # spectrometer constructor attributes
@@ -341,9 +341,6 @@ class spectrometer():
                         [0]+
                         [truncnorm(-b, b, loc=bin_size*mu, scale=std).rvs(1)[0] for mu in range(1, n)]+
                         [self.shift_cutoff])
-        hydrogens: dict[str]: (int, float, float)
-            Dictionary of hydrogen groups with the total number, chemical shifts, T2 of 
-            the members for each group (default TMS a:(12, 0.0, 150.0))
                 tck = interpolate.splrep(x, y, s=0)
                 self.spectra_artifact += interpolate.splev(self.shift, tck, der=0)
             else: 
@@ -357,7 +354,7 @@ class spectrometer():
         Parameter
         ---------
         moles: dict[str]:(molecule, float)
-            Sample object that contains molecules and T2, r, and timeunit
+            Sample object that contains molecules with T2, r, and timeunit
         noise: bool
             If true, noise is introduced with std
         """
