@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2020.8.30)  20 JUL 2021 10:57
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2020.8.30)  30 DEC 2021 15:01
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -773,10 +773,10 @@ l.186 \end{equation}
 
 ] [2]
 Package epstopdf Info: Source file: <sed.eps>
-(epstopdf)                    date: 2021-05-28 11:32:29
+(epstopdf)                    date: 2021-08-29 09:01:01
 (epstopdf)                    size: 174828 bytes
 (epstopdf)             Output file: <sed-eps-converted-to.pdf>
-(epstopdf)                    date: 2021-05-28 11:32:53
+(epstopdf)                    date: 2021-08-29 09:01:01
 (epstopdf)                    size: 6125 bytes
 (epstopdf)             Command: <repstopdf --outfile=sed-eps-converted-to.pdf s
 ed.eps>
@@ -861,7 +861,7 @@ cmr8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pfb
 /texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/share/texliv
 e/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/share/texlive/texm
 f-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on ft.pdf (14 pages, 220536 bytes).
+Output written on ft.pdf (14 pages, 220637 bytes).
 PDF statistics:
  351 PDF objects out of 1000 (max. 8388607)
  313 compressed objects within 4 object streams
