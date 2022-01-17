@@ -149,6 +149,8 @@ class spectrometer():
         Relaxivity for reference hydrogen
     std: float
         Standard deviation of signal noise
+    dtype: str
+        Data type for shift and spectra
     noise: complex float
         Signal noise
     splits: list[tuple(float, float)]
@@ -157,10 +159,12 @@ class spectrometer():
         NMR sample signal
     FFT: numpy array[complex float]
         FFT output of the signal
-    spectra: numpy array[complex float]
-        NMR spectra output with the artifact and noise
     spectra_artifact: numpy array[float]
         Spectra artifact
+    target: numpy array[float]
+        NMR spectra output without the artifact
+    spectra: numpy array[complex float]
+        NMR spectra output with the artifact and noise
 
     Methods
     -------
@@ -191,7 +195,8 @@ class spectrometer():
             f_min=0.2,
             RH=12,
             r=0.005,
-            std=0.0001):
+            std=0.00005,
+            dtype='float32'):
         """ spectrometer constructor
 
         Parameters
@@ -214,6 +219,8 @@ class spectrometer():
             Relaxivity for reference hydrogen (default 0.005)
         std: float
             Standard deviation of signal noise (default 0.0001)
+        dtype: str
+            Data type for shift and spectra
         """
 
         # spectrometer constructor attributes
@@ -230,10 +237,11 @@ class spectrometer():
         self.df = self.f_s*pow(2, -self.p)
         self.nf = pow(2, self.p-self.p_l)
         self.f = self.df*np.arange(0, self.nf)
-        self.shift = (self.shift_cutoff/self.nf)*np.arange(0, self.nf)
+        self.shift = ((self.shift_cutoff/self.nf)*np.arange(0, self.nf)).astype(dtype)
         self.hr = 1/RH
         self.r = r
         self.std = std
+        self.dtype = dtype
 
     # spectrometer unit method
     def unit(self, timeunit):
@@ -291,7 +299,8 @@ class spectrometer():
             t_cut=1500,
             f_min=0.2,
             RH=12,
-            std=0.00005):
+            std=0.00005,
+            dtype='float32'):
         """
         Spectrometer calibrate method
 
@@ -306,7 +315,8 @@ class spectrometer():
                 t_cut=t_cut,
                 f_min=f_min,
                 RH=RH,
-                std=std)
+                std=std,
+                dtype=dtype)
 
     # spectrometer artifact method
     def artifact(self, baseline=False):
@@ -387,14 +397,15 @@ class spectrometer():
 
         self.signal = self.dt*self.r*np.sum(separate_fid, axis=0) + self.noise
         self.FFT = np.fft.fft(self.signal, n=pow(2, self.p))[:self.nf]
-        self.spectra = self.FFT + self.spectra_artifact
+        self.target = self.FFT.real.astype(self.dtype)
+        self.spectra = self.target + self.spectra_artifact.astype(self.dtype)
 
     def __repr__(self):
         return "Spectrometer class that measures a sample solution with organic molecules in it"
 
     def __call__(self):
         try:
-            return self.spectra
+            return self.spectra, self.target
         except AttributeError:
             return None
 
