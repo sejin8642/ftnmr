@@ -124,23 +124,24 @@ class spectrometer():
     w_l: float
         angular Larmor frequency
     f_s: float
-        Sampling frequency
+        Sampling frequency for frequency-adjusted signal
     dt: float
         Sampling interval, also called timestep
     gamma: float
         Gyromagnetic ratio
     ns: integer
-        Total number of signal samples (different from the number of FFT output)
+        Total number of collected signal samples (different from the number of FFT output)
     p: integer
-        Power of two that yields the number of processed data points 
+        Power of two that yields the number of FFT-processed data points. 2^p is the number of
+        data to DFT, which is bigger than ns
     t: numpy array[float]
         Times at which signal is sampled
     df: float
-        Frequency resolution
+        Frequency resolution in <f_unit> unit
     nf: int
         Number of FFT output
     f: numpy array[float]
-        Frequency domain for FFT output
+        Frequency domain for FFT output in <f_unit> unit
     shift: numpy array[float]
         Chemical shift doamin for FFT output
     hr: float
@@ -216,7 +217,7 @@ class spectrometer():
         RH: integer
             Number of hydrogens the reference molecule contains (default 12)
         r: float
-            Relaxivity for reference hydrogen (default 0.005)
+            Relaxivity for reference hydrogen (default 0.005 kHz)
         std: float
             Standard deviation of signal noise (default 0.0001)
         dtype: str
