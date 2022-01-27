@@ -365,7 +365,7 @@ class spectrometer():
         Parameter
         ---------
         moles: dict[str]:(molecule, float)
-            Sample object that contains molecules with T2, r, and timeunit
+            Dictionary that contains multiple molecule objects with their relative abundances.
         noise: bool
             If true, noise is introduced with std
         """
