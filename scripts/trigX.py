@@ -39,7 +39,7 @@ def xarray(
         return np.sqrt(pow( A*w*np.cos(w*x + theta) , 2) + 1)
     
     # total arc length and sub_arc size
-    total_arc = integrate.quad(integrand, a, x_max, args=(A, w, theta))[0]
+    total_arc = integrate.quad(integrand, x_min, x_max, args=(A, w, theta))[0]
     sub_arc = total_arc/(N-1)
     
     # function that determines the upper limit value of sub_arc by applying optimize.fsolve
