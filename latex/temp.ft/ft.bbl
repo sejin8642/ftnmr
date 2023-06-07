@@ -1,0 +1,127 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.1 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{nty/global//global/global}
+    \entry{arfken}{book}{}
+      \name{author}{3}{}{%
+        {{hash=4963c826992d0abdfc79cc7edb5bef92}{%
+           family={Arfken},
+           familyi={A\bibinitperiod},
+           given={George\bibnamedelima B.},
+           giveni={G\bibinitperiod\bibinitdelim B\bibinitperiod}}}%
+        {{hash=e17048c80ef9b0e17796f8b23e67a6d4}{%
+           family={Weber},
+           familyi={W\bibinitperiod},
+           given={Hans\bibnamedelima J.},
+           giveni={H\bibinitperiod\bibinitdelim J\bibinitperiod}}}%
+        {{hash=9ffd422c12e4df2735265da88845497b}{%
+           family={Harris},
+           familyi={H\bibinitperiod},
+           given={Frank\bibnamedelima E.},
+           giveni={F\bibinitperiod\bibinitdelim E\bibinitperiod}}}%
+      }
+      \list{location}{1}{%
+        {225 Wyman Street, Waltham, MA 02451, USA}%
+      }
+      \list{publisher}{1}{%
+        {Elsevier Inc.}%
+      }
+      \strng{namehash}{73395921483465fe8d9c21a5471d0b1b}
+      \strng{fullhash}{73395921483465fe8d9c21a5471d0b1b}
+      \strng{bibnamehash}{73395921483465fe8d9c21a5471d0b1b}
+      \strng{authorbibnamehash}{73395921483465fe8d9c21a5471d0b1b}
+      \strng{authornamehash}{73395921483465fe8d9c21a5471d0b1b}
+      \strng{authorfullhash}{73395921483465fe8d9c21a5471d0b1b}
+      \field{sortinit}{A}
+      \field{sortinithash}{a3dcedd53b04d1adfd5ac303ecd5e6fa}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{edition}{7}
+      \field{isbn}{9780123846549}
+      \field{title}{Mathematical Methods for Physicists}
+      \field{year}{2013}
+    \endentry
+    \entry{james}{book}{}
+      \name{author}{1}{}{%
+        {{hash=02e626ad483cb329c4496efcfeaf3dab}{%
+           family={James},
+           familyi={J\bibinitperiod},
+           given={J.\bibnamedelimi F.},
+           giveni={J\bibinitperiod\bibinitdelim F\bibinitperiod}}}%
+      }
+      \list{location}{1}{%
+        {The Edinburg Building, Cambridge CB2 8RU, UK}%
+      }
+      \list{publisher}{1}{%
+        {Cambridge University Press}%
+      }
+      \strng{namehash}{02e626ad483cb329c4496efcfeaf3dab}
+      \strng{fullhash}{02e626ad483cb329c4496efcfeaf3dab}
+      \strng{bibnamehash}{02e626ad483cb329c4496efcfeaf3dab}
+      \strng{authorbibnamehash}{02e626ad483cb329c4496efcfeaf3dab}
+      \strng{authornamehash}{02e626ad483cb329c4496efcfeaf3dab}
+      \strng{authorfullhash}{02e626ad483cb329c4496efcfeaf3dab}
+      \field{sortinit}{J}
+      \field{sortinithash}{c45040a764d616897e7f5b30174d7b92}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{edition}{3}
+      \field{isbn}{9780521176835}
+      \field{title}{A Student's Guide to Fourier Transforms}
+      \field{year}{2011}
+    \endentry
+    \entry{stein}{book}{}
+      \name{author}{2}{}{%
+        {{hash=1e432a4cd42a48f08962229276035a77}{%
+           family={Stein},
+           familyi={S\bibinitperiod},
+           given={Elias\bibnamedelima M.},
+           giveni={E\bibinitperiod\bibinitdelim M\bibinitperiod}}}%
+        {{hash=11a7d9a61c9004104829d3ea6835494f}{%
+           family={Shakarchi},
+           familyi={S\bibinitperiod},
+           given={Rami},
+           giveni={R\bibinitperiod}}}%
+      }
+      \list{location}{1}{%
+        {41 William Street, Princeton, New Jersey 08540, USA}%
+      }
+      \list{publisher}{1}{%
+        {Princeton University Press}%
+      }
+      \strng{namehash}{b35e88a256824c1766e1ada15efaa66c}
+      \strng{fullhash}{b35e88a256824c1766e1ada15efaa66c}
+      \strng{bibnamehash}{b35e88a256824c1766e1ada15efaa66c}
+      \strng{authorbibnamehash}{b35e88a256824c1766e1ada15efaa66c}
+      \strng{authornamehash}{b35e88a256824c1766e1ada15efaa66c}
+      \strng{authorfullhash}{b35e88a256824c1766e1ada15efaa66c}
+      \field{sortinit}{S}
+      \field{sortinithash}{c319cff79d99c853d775f88277d4e45f}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{edition}{1}
+      \field{isbn}{9780691113845}
+      \field{title}{Fourier Analysis: An Introduction}
+      \field{year}{2003}
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+

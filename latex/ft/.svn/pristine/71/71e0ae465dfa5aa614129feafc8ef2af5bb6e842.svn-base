@@ -1,0 +1,76 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\abx@aux@refcontext{nty/global//global/global}
+\providecommand\HyperFirstAtBeginDocument{\AtBeginDocument}
+\HyperFirstAtBeginDocument{\ifx\hyper@anchor\@undefined
+\global\let\oldcontentsline\contentsline
+\gdef\contentsline#1#2#3#4{\oldcontentsline{#1}{#2}{#3}}
+\global\let\oldnewlabel\newlabel
+\gdef\newlabel#1#2{\newlabelxx{#1}#2}
+\gdef\newlabelxx#1#2#3#4#5#6{\oldnewlabel{#1}{{#2}{#3}}}
+\AtEndDocument{\ifx\hyper@anchor\@undefined
+\let\contentsline\oldcontentsline
+\let\newlabel\oldnewlabel
+\fi}
+\fi}
+\global\let\hyper@last\relax 
+\gdef\HyperFirstAtBeginDocument#1{#1}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\@writefile{toc}{\boolfalse {citerequest}\boolfalse {citetracker}\boolfalse {pagetracker}\boolfalse {backtracker}\relax }
+\@writefile{lof}{\boolfalse {citerequest}\boolfalse {citetracker}\boolfalse {pagetracker}\boolfalse {backtracker}\relax }
+\@writefile{lot}{\boolfalse {citerequest}\boolfalse {citetracker}\boolfalse {pagetracker}\boolfalse {backtracker}\relax }
+\abx@aux@cite{arfken}
+\abx@aux@segm{0}{0}{arfken}
+\abx@aux@cite{arfken}
+\abx@aux@segm{0}{0}{arfken}
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {section}{\numberline {1}Prerequisite Mathematics}{1}{section.1}\protected@file@percent }
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {subsection}{\numberline {1.1}Dirac Delta Function}{1}{subsection.1.1}\protected@file@percent }
+\newlabel{eq:dirac}{{1.6}{1}{Dirac Delta Function}{equation.1.6}{}}
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {subsection}{\numberline {1.2}Sampling function}{1}{subsection.1.2}\protected@file@percent }
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {subsection}{\numberline {1.3}Convolution}{1}{subsection.1.3}\protected@file@percent }
+\newlabel{eq:convolution}{{1.8}{1}{Convolution}{equation.1.8}{}}
+\@writefile{lot}{\defcounter {refsection}{0}\relax }\@writefile{lot}{\contentsline {table}{\numberline {1.1}{\ignorespaces optional argument}}{2}{table.1.1}\protected@file@percent }
+\newlabel{tab:convolution}{{1.1}{2}{optional argument}{table.1.1}{}}
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {subsection}{\numberline {1.4}Kronecker delta}{2}{subsection.1.4}\protected@file@percent }
+\newlabel{eq:kronecker}{{1.15}{2}{Kronecker delta}{equation.1.15}{}}
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {subsection}{\numberline {1.5}Sinusoidal exponential decay function}{3}{subsection.1.5}\protected@file@percent }
+\newlabel{eq:rsed}{{1.16}{3}{Sinusoidal exponential decay function}{equation.1.16}{}}
+\newlabel{eq:sed}{{1.17}{3}{Sinusoidal exponential decay function}{equation.1.17}{}}
+\@writefile{lof}{\defcounter {refsection}{0}\relax }\@writefile{lof}{\contentsline {figure}{\numberline {1.1}{\ignorespaces sed function plot, s vs. t}}{3}{figure.1.1}\protected@file@percent }
+\newlabel{fig1}{{1.1}{3}{sed function plot, s vs. t}{figure.1.1}{}}
+\abx@aux@cite{james}
+\abx@aux@segm{0}{0}{james}
+\abx@aux@cite{arfken}
+\abx@aux@segm{0}{0}{arfken}
+\abx@aux@cite{stein}
+\abx@aux@segm{0}{0}{stein}
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {section}{\numberline {2}Continuous Fourier Transform}{4}{section.2}\protected@file@percent }
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Definition of Fourier transform}{4}{subsection.2.1}\protected@file@percent }
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}FT with the extra phase factor}{4}{subsection.2.2}\protected@file@percent }
+\@writefile{lot}{\defcounter {refsection}{0}\relax }\@writefile{lot}{\contentsline {table}{\numberline {2.1}{\ignorespaces optional argument}}{5}{table.2.1}\protected@file@percent }
+\newlabel{tab:ft}{{2.1}{5}{optional argument}{table.2.1}{}}
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Poisson Summation Formula}{5}{subsection.2.3}\protected@file@percent }
+\newlabel{eq:poisson}{{2.6}{5}{Poisson Summation Formula}{equation.2.6}{}}
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}FT of the sampling function}{5}{subsection.2.4}\protected@file@percent }
+\abx@aux@cite{james}
+\abx@aux@segm{0}{0}{james}
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {subsection}{\numberline {2.5}FT of product of \(u(t)\) and \(s(t)\)}{6}{subsection.2.5}\protected@file@percent }
+\newlabel{sec:su}{{2.5}{6}{FT of product of \(u(t)\) and \(s(t)\)}{subsection.2.5}{}}
+\newlabel{eq:ftsu}{{2.9}{6}{FT of product of \(u(t)\) and \(s(t)\)}{equation.2.9}{}}
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {subsection}{\numberline {2.6}FT of Convolution}{6}{subsection.2.6}\protected@file@percent }
+\newlabel{eq:ftconv}{{2.11}{6}{FT of Convolution}{equation.2.11}{}}
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {subsection}{\numberline {2.7}FT of \(s(t)u(t)\) again}{7}{subsection.2.7}\protected@file@percent }
+\newlabel{eq:ftsu1}{{2.13}{7}{FT of \(s(t)u(t)\) again}{equation.2.13}{}}
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {subsection}{\numberline {2.8}FT of SED}{7}{subsection.2.8}\protected@file@percent }
+\abx@aux@cite{james}
+\abx@aux@segm{0}{0}{james}
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {section}{\numberline {3}Discrete Fourier transform}{8}{section.3}\protected@file@percent }
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Definition of DFT}{8}{subsection.3.1}\protected@file@percent }
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Approximation of DFT}{8}{subsection.3.2}\protected@file@percent }
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {section}{References}{10}{section*.3}\protected@file@percent }
+\abx@aux@refcontextdefaultsdone
+\abx@aux@defaultrefcontext{0}{arfken}{nty/global//global/global}
+\abx@aux@defaultrefcontext{0}{james}{nty/global//global/global}
+\abx@aux@defaultrefcontext{0}{stein}{nty/global//global/global}
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {section}{Index}{11}{section*.4}\protected@file@percent }

@@ -133,11 +133,11 @@ class spectrometer():
         Total number of collected signal samples (different from the number of FFT output)
     p: integer
         Power of two that yields the number of FFT-processed data points. 2^p is the number of
-        data to DFT, which is bigger than ns
+        data to DFT 
     t: numpy array[float]
-        Times at which signal is sampled
+        Times at which signal is sampled, sampling duration from zero to maximum t
     df: float
-        Frequency resolution in <f_unit> unit
+        Frequency resolution of FFT in <f_unit> unit
     nf: int
         Number of FFT output
     f: numpy array[float]
@@ -203,17 +203,28 @@ class spectrometer():
         Parameters
         ----------
         B: float
-            External magnetic field (default 1.5 Tesla) 
+            External magnetic field (default 10.0 Tesla) 
+            This affects angular Larmor frequency, and Larmor frequency together with shift_maximum
+            is used to determine the sampling rate
         timeunit: str
             Unit string for time variable. It is either msec or micron (default msec)
         shift_maximum: float
-            Maximum chemical shift to set the maximum frequency (default 128.0 ppm)
+            Maximum chemical shift to set the maximum frequency of frequency region of FFT calculation
+            (default 128.0 ppm). However, the spectrometer FFT output is clipped at shift_cutoff 
+            determined by shift_minimum because no molecules are expected to be detected after such
+            frequency. In other words, shift_maximum together with angular Larmor frequency is used to 
+            determine sampling rate as sampling rate sets the maximum frequency of FFT output region
         shift_minimum: float
-            Minimum chemical shift that the frequency range must include (default 15.0)
+            Minimum chemical shift that the frequency range of FFT must include (default 15.0)
+            Remember that FFT calculation output is truncated to yield spectrometer FFT output so that 
+            the spectrometer FFT output range is set to include shift_minimum
         t_cut: float
-            Cutoff time that the maximum t value must exceed (default 1500.0)
+            Cutoff time period that signal sampling duration, t, must exceed (default 1500.0)
+            This will determine how long the spectrometer will measure the signal. Together with f_min
+            it determines the number of signal samples and FFT output
         f_min: float
-            Minimum frequency resolution for high resolution NMR spectrum (default 0.2 Hz)
+            Minimum frequency resolution for high resolution NMR spectrum (default 0.2 Hz). Together
+            with t_cut, it determines the number of signal samples and FFT output
         RH: integer
             Number of hydrogens the reference molecule contains (default 12)
         r: float
@@ -274,6 +285,13 @@ class spectrometer():
     def time(self, t_cut, f_min):
         """
         A list of times at which the signal is sampled with sampling interval and rate.
+
+        Parameters
+        ----------
+        t_cut: float
+            Cutoff time that the maximum t value must exceed (default 1500.0)
+        f_min: float
+            Minimum frequency resolution for high resolution NMR spectrum (default 0.2 Hz)
 
         Returns
         -------

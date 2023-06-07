@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2023.5.31)  7 JUN 2023 12:28
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2020.8.30)  30 DEC 2021 15:01
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -773,10 +773,10 @@ l.186 \end{equation}
 
 ] [2]
 Package epstopdf Info: Source file: <sed.eps>
-(epstopdf)                    date: 2023-06-07 12:27:52
+(epstopdf)                    date: 2021-08-29 09:01:01
 (epstopdf)                    size: 174828 bytes
 (epstopdf)             Output file: <sed-eps-converted-to.pdf>
-(epstopdf)                    date: 2023-06-07 12:27:52
+(epstopdf)                    date: 2021-08-29 09:01:01
 (epstopdf)                    size: 6125 bytes
 (epstopdf)             Command: <repstopdf --outfile=sed-eps-converted-to.pdf s
 ed.eps>
@@ -840,7 +840,7 @@ Package logreq Info: Writing requests to 'ft.run.xml'.
 Here is how much of TeX's memory you used:
  14567 strings out of 481239
  245625 string characters out of 5920377
- 903194 words of memory out of 5000000
+ 903197 words of memory out of 5000000
  29542 multiletter control sequences out of 15000+600000
  541357 words of font info for 57 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191

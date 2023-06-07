@@ -1,0 +1,32 @@
+@book{arfken,
+	author = {
+		George B. Arfken and
+		Hans J. Weber and
+		Frank E. Harris},
+	title = "Mathematical Methods for Physicists",
+	edition = 7,
+	year = 2013,
+	publisher = "Elsevier Inc.",
+	address = "225 Wyman Street, Waltham, MA 02451, USA",
+	ISBN = 9780123846549}
+
+@book{james,
+	author = "J. F. James",
+	title = "A Student's Guide to Fourier Transforms", 
+	edition = 3,
+	year = 2011,
+	publisher = "Cambridge University Press",
+	address = "The Edinburg Building, Cambridge CB2 8RU, UK",
+	ISBN = 9780521176835}
+
+@book{stein,
+	author = {
+		Elias M. Stein and
+		Rami Shakarchi},
+	title = "Fourier Analysis: An Introduction",
+	edition = 1,
+	year = 2003,
+	publisher = "Princeton University Press",
+	address = "41 William Street, Princeton, New Jersey 08540, USA",
+	ISBN = 9780691113845}
+
