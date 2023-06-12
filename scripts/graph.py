@@ -24,16 +24,16 @@ def graph(x, y, xlabel=r'$x$', ylabel=r'$y$', save=False, filename='figure.eps')
     # configures plot axes, labels and their positions with arrow axis tips
     if (xmin <= 0) and (0 <= xmax):
         ax.spines['left'].set_position(('data', 0)) 
-        ax.yaxis.set_label_coords(-xmin/(xmax - xmin), 1.02)
         ax.set_ylabel(ylabel, rotation=0)
+        ax.yaxis.set_label_coords(-xmin/(xmax - xmin), 1.02)
         ax.plot(0, 1, "^k", markersize=3, transform=ax.get_xaxis_transform(), clip_on=False)
     else:
         ax.spines['left'].set_visible(False)
         ax.set_ylabel(ylabel).set_visible(False)
     
     ax.spines['bottom'].set_position(('data', 0)) 
-    ax.xaxis.set_label_coords(1.02, -ymin/(ymax - ymin) + 0.02)
     ax.set_xlabel(xlabel)
+    ax.xaxis.set_label_coords(1.02, -ymin/(ymax - ymin) + 0.02)
     ax.plot(1, 0, ">k", markersize=3, transform=ax.get_yaxis_transform(), clip_on=False)
 
     # plots y vs. x in black line with linesize 2 with the given axes

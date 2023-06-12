@@ -1,9 +1,12 @@
 # fid class (free induction decay for a single proton)
+import numpy as np
+
 class fid():
     """
     Free induction decay class.
 
-    This class will create a FID signal with only one adjusted signal. All the class variables are in SI unit, but time for instance variable is either msec or micron.
+    This class will create a FID signal with only one adjusted signal. 
+    All the class variables are in SI unit, but time for instance variable is either msec or micron.
 
     Attributes
     ----------
@@ -29,7 +32,7 @@ class fid():
         Gyromagnetic ratio
     f0: float
         Adjusted signal frequency according to chemical shift
-        (It is a detected frequency minus the reference frequency)
+        (It is a real frequency minus the reference frequency)
     w: float
         Adjusted signal angular frequency
     f_s: float
@@ -68,7 +71,7 @@ class fid():
     # fid constructor
     def __init__(
             self,
-            B=10.0,
+            B=1.5,
             timeunit='msec',
             shift_maximum=128.0,
             t_cut=600,
@@ -104,7 +107,10 @@ class fid():
         self.dt = 1/self.f_s
         self.ns, self.p, self.t = self.time(self.f_s, t_cut)
         self.f0 = self.signal_frequency(B, timeunit, shift)
-        self.nsp = 1/(self.f0*self.dt)
+        try:
+            self.nsp = 1/(self.f0*self.dt)
+        except ZeroDivisionError:
+            self.nsp = None
         self.w = 2*np.pi*self.f0
         self.signal = self.signal_output()
 

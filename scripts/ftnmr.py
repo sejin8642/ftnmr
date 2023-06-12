@@ -12,6 +12,8 @@ from itertools import product
 from scipy.stats import truncnorm
 from scipy import interpolate
 
+import fid
+
 # Larmor angular frequency function
 def larmor(B=1.5, unit='MHz'):
     """ Returns Larmor angular frequency based on external B field 
@@ -442,6 +444,10 @@ class lorentzian():
         Unit string for ordinary frequency (default kHz)
     ns: integer
         Total number of frequencies (default pow(2, 15))
+    f: list[float]
+        Vertical frequency axis values
+    shift: list[float]
+        Vertical frequency axis values in chemical shift
     r: float
         Relaxivity
     f0: float
@@ -487,12 +493,12 @@ class lorentzian():
         """
 
         # Lorentzian object attributes
-        if isinstance(ob, fid):
+        if isinstance(ob, fid.fid):
             self.unit = ob.frequency_unit
             self.ns = ob.ns
             self.p = ob.p
             self.f = np.arange(0, ob.ns)*ob.f_s/ob.ns # the last f excludes fmax
-            self.cs = pow(10, 6)*self.f/ob.f_l
+            self.shift = pow(10, 6)*self.f/ob.f_l
             self.r = ob.r
             self.f0 = ob.f0
             self.lorentz = self.lorz()
@@ -501,7 +507,7 @@ class lorentzian():
             self.ns = ns
             self.p = np.log2(ns)
             self.f = np.arange(0, ns)*f_max/ns # the last f excludes f_max
-            self.cs = pow(10, 6)*self.f/f_l
+            self.shift = pow(10, 6)*self.f/f_l
             self.r = r
             self.f0 = f0
             self.lorentz = self.lorz()
