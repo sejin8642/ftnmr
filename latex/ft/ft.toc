@@ -30,12 +30,12 @@
 \defcounter {refsection}{0}\relax 
 \contentsline {subsection}{\numberline {2.8}FT of SED}{7}{subsection.2.8}%
 \defcounter {refsection}{0}\relax 
-\contentsline {section}{\numberline {3}Discrete Fourier transform}{8}{section.3}%
+\contentsline {section}{\numberline {3}Discrete Fourier transform}{11}{section.3}%
 \defcounter {refsection}{0}\relax 
-\contentsline {subsection}{\numberline {3.1}Definition of DFT}{8}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.1}Definition of DFT}{11}{subsection.3.1}%
 \defcounter {refsection}{0}\relax 
-\contentsline {subsection}{\numberline {3.2}Approximation of DFT}{8}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.2}Approximation of DFT}{11}{subsection.3.2}%
 \defcounter {refsection}{0}\relax 
-\contentsline {section}{References}{10}{section*.3}%
+\contentsline {section}{References}{13}{section*.3}%
 \defcounter {refsection}{0}\relax 
-\contentsline {section}{Index}{11}{section*.4}%
+\contentsline {section}{Index}{14}{section*.4}%

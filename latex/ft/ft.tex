@@ -34,8 +34,8 @@
 \newcommand{\sed}[2]{#2_{0}e^{2\pi if_{0}#1}e^{-#1/T} \theta (#1)} % SED function
 \newcommand{\fsum}[1]{\sum_{#1 = -\infty}^{\infty}} % infinite sum
 \newcommand{\spf}[2]{\Delta #1 \fsum{#2} \delta (#1 - #2 \Delta #1)} % sampling function
-\newcommand{\fourier}[2]{\mathcal{F}_{#1}[#2]} % Fourier transform notation
-\newcommand{\ifourier}[2]{\mathcal{F}_{#1}^{-1}[#2]} % inverse FT notation
+\newcommand{\fourier}[3]{\underset{#1 \rightarrow #3}{\mathcal{F}}[#2]} % Fourier transform notation
+\newcommand{\ifourier}[3]{\underset{#3 \leftarrow #1}{\mathcal{F}}[#2]} % inverse FT notation
 \newcommand{\ft}[3]{\fint #2 e^{-2\pi i#3#1} d#1} % Fourier transform 
 \newcommand{\ift}[3]{\fint #2 e^{2\pi i#1#3} d#1} % Inverse Fourier transform 
 \newcommand{\conv}[4]{\fint #3(#2)#4(#1 - #2) d#2} % Convolution
@@ -268,18 +268,18 @@ Continuous FT transforms a complex-valued function in \(t\) to another complex-v
 Consider a function of \(t\), \(x(t)\). The continuous FT of \(x\), \(X(f)\), is as follows:
 \begin{equation}
 	\begin{aligned}[b]
-		X(f)	&=\fourier{t}{x} \\
+		X(f)	&=\fourier{t}{x}{f} \\
 			&=\ft{t}{x(t)}{f}
 	\end{aligned}
 \end{equation}
-It is sometimes called continuous-time Fourier transform (CTFT) to emphasize that \(t\) variable represents physical continuous time in an application. The domain of \(X(f)\), \(f\), is also in \(\mathbb{R}\). (in my discussion \(t\) and \(f\) represent time and frequency respectively). \(\fourier{t}{x}(f)\) notation can be used to explicitly indicate that \(x\) is transformed into \(f\) domain. It is easy to see that if \(a\) is a constant, then \(\fourier{t}{ax} = a \fourier{t}{x}\). You can also perform inverse FT on \(X\), which is:
+It is sometimes called continuous-time Fourier transform (CTFT) to emphasize that \(t\) variable represents physical continuous time in an application. The domain of \(X(f)\), \(f\), is also in \(\mathbb{R}\). (in my discussion \(t\) and \(f\) represent time and frequency respectively). It is easy to see that if \(a\) is a constant, then \(\fourier{t}{ax}{f} = a \fourier{t}{x}{f}\). You can also perform inverse FT on \(X\), which is:
 \begin{equation}
 	\begin{aligned}[b]
-		\ifourier{f}{X}	&= \ift{f}{X(f)}{t} \\
-				&= \ift{f}{\left ( \ft{\tau}{x(\tau)}{f}\right )}{t} \\
-				&= \fint x(\tau) \fint e^{2\pi if(t - \tau)} df d\tau \\
-				&= \fint x(\tau) \delta (t - \tau) d\tau \\
-				&= x(t)
+		\ifourier{f}{X}{t}	&= \ift{f}{X(f)}{t} \\
+					&= \ift{f}{\left ( \ft{\tau}{x(\tau)}{f}\right )}{t} \\
+					&= \fint x(\tau) \fint e^{2\pi if(t - \tau)} df d\tau \\
+					&= \fint x(\tau) \delta (t - \tau) d\tau \\
+					&= x(t)
 	\end{aligned}
 \end{equation}
 where I used \eqref{eq:dirac} orthogonality relation .We will continue to use the notation \(x(t)\) and \(X(f)\) as an example of FT pair throughout the discussion (they are called 'Fourier pair'). It is also easy to see that the inverse FT of one is the Dirac Delta function \cite{james}.
@@ -289,14 +289,14 @@ where I used \eqref{eq:dirac} orthogonality relation .We will continue to use th
 Consider another function, \(e^{2\pi i f_{0} t}x(t)\). The FT of it is:
 \begin{equation}
 	\begin{aligned}[b]
-		\fourier{t}{e^{2\pi i f_{0} t}x(t)}
+		\fourier{t}{e^{2\pi i f_{0} t}x(t)}{f}
 			&= \ft{t}{e^{2\pi i f_{0} t}x(t)}{f}\\
 			&= \ft{t}{x(t)}{(f - f_{0})}\\
-			&= \fourier{t}{x}(f - f_{0})\\
+			&= \fourier{t}{x}{f - f_{0}}\\
 			&= X(f - f_{0})
 	\end{aligned}
 \end{equation}
-It is simply the FT of \(x\) in \(f - f_{0}\) in domain. By the same token, it is easy to see that \(\fourier{t}{x(t - \tau)} = e^{-2\pi i f\tau}X(f)\). A list of FT properties is in the table \ref{tab:ft} \cite{arfken}:
+It is simply the FT of \(x\) in \(f - f_{0}\) in domain. By the same token, it is easy to see that \(\fourier{t}{x(t - \tau)}{f} = e^{-2\pi i f\tau}X(f)\). A list of FT properties is in the table \ref{tab:ft} \cite{arfken}:
 \begin{table}
 	\centering
 	\caption[optional argument]{Properties of Fourier transform}
@@ -304,19 +304,19 @@ It is simply the FT of \(x\) in \(f - f_{0}\) in domain. By the same token, it i
 		\hline
 		Property		& Mathematical Expression\\
 		\hline
-		Linearity		& \(\fourier{t}{ax + by} = aX + bY\) \\
+		Linearity		& \(\fourier{t}{ax + by}{f} = aX + bY\) \\
 		\hline
-		Shift in time		& \(\fourier{t}{x(t -\tau)} = e^{-2\pi if\tau}X(f)\)\\
+		Shift in time		& \(\fourier{t}{x(t -\tau)}{f} = e^{-2\pi if\tau}X(f)\)\\
 		\hline
-		Phase factor		& \(\fourier{t}{e^{2\pi i f_{0} t}x(t)} = X(f - f_{0})\)\\
+		Phase factor		& \(\fourier{t}{e^{2\pi i f_{0} t}x(t)}{f} = X(f - f_{0})\)\\
 		\hline
-		Scaling in time domain	& \(\fourier{t}{x(at)} = \frac{1}{a}X(f/a)\)\\
+		Scaling in time domain	& \(\fourier{t}{x(at)}{f} = \frac{1}{a}X(f/a)\)\\
 		\hline
-		Complex conjugation	& \(\overline{\fourier{t}{x}} = \overline{X(-f)}\) \\
+		Complex conjugation	& \(\overline{\fourier{t}{x}{f}} = \overline{X(-f)}\) \\
 		\hline
-		FT of Convolution	& \(\fourier{t}{x*y} = X(f)Y(f) \)\\
+		FT of Convolution	& \(\fourier{t}{x*y}{f} = X(f)Y(f) \)\\
 		\hline
-		FT of product		& \(\fourier{t}{xy} = X(f)*Y(f) \)\\
+		FT of product		& \(\fourier{t}{xy}{f} = X(f)*Y(f) \)\\
 		\hline
 	\end{tabular}
 	\label{tab:ft}
@@ -333,9 +333,9 @@ Consider a Fourier pair \(x(t)\) and \(X(f)\). Then the Poisson Summation formul
 For example, if \(x(n) = e^{2 \pi ian}\), then we know that the FT of \(x(n)\) is:
 \begin{equation}
 	\begin{aligned}[b]
-		X(k)	&= \fourier{n}{x}(k) \\
-			&= \fourier{n}{e^{2 \pi ian} \times 1}(k) \\
-			&= \fourier{n}{1}(k - a) \\
+		X(k)	&= \fourier{n}{x}{k} \\
+			&= \fourier{n}{e^{2 \pi ian} \times 1}{k} \\
+			&= \fourier{n}{1}{k - a} \\
 			&= \delta (k - a)
 	\end{aligned}
 \end{equation}
@@ -353,7 +353,7 @@ Thus, according to the Poisson Summation formula, it follows that:
 Suppose \(u(t)\) is the sampling function with the sampling interval \(\Delta t\). Then the FT of \(u\) is:
 \begin{equation}
 	\begin{aligned}[b]
-		\fourier{t}{u}
+		\fourier{t}{u}{f}
 			&= \ft{t}{u(t)}{f} \\
 			&= \ft{t}{\spf{t}{n}}{f} \\
 			&= \Delta t \fsum{n} e^{-2\pi ifn\Delta t} \fint \delta (t - n \Delta t) dt \\
@@ -363,7 +363,7 @@ Suppose \(u(t)\) is the sampling function with the sampling interval \(\Delta t\
 By applying \eqref{eq:poisson}, we can deduce that:
 \begin{equation}
 	\begin{aligned}[b]
-		\fourier{t}{u}
+		\fourier{t}{u}{f}
 			&= \Delta t \fsum{n} e^{-2\pi ifn\Delta t} \\
 			&= \Delta t \fsum{k} \delta (k + f \Delta t)\\
 			&= \fsum{k} \delta (f + kf_{s})
@@ -376,7 +376,7 @@ Where \(f_{s} = 1/\Delta t\) is called a \emph{sampling rate}\index{Sampling rat
 Consider an arbitrary function \(s(t)\). Let \(x(t) = s(t)u(t)\). The FT of \(x(t)\) is then:
 \begin{equation}
 	\begin{aligned}[b]
-		\fourier{t}{x}
+		\fourier{t}{x}{f}
 			&= \ft{t}{s(t)u(t)}{f}\\
 			&= \ft{t}{s(t) \spf{t}{n}}{f}\\
 			&= \fsum{n} s(n \Delta t) e^{-2\pi ifn\Delta t} \Delta t 
@@ -392,20 +392,20 @@ If \(\Delta t \to 0\), the above infinite sum becomes FT of \(s(t)\).
 Consider the convolution of two functions \(x(t)*y(t)\). The FT of it is:
 \begin{equation}
 	\begin{aligned}[b]
-		\fourier{t}{(x*y)(t)}
+		\fourier{t}{(x*y)(t)}{f}
 			&= \ft{t}{(x*y)(t)}{f}\\
 			&= \ft{t}{\left (\conv{t}{\tau}{x}{y} \right )}{f}\\ 
 			&= \fint x(\tau) \left (\fint y(t - \tau) e^{-2\pi ift} dt \right ) d\tau\\
-			&= \fint x(\tau) \left ( e^{-2\pi if\tau}\fourier{f}{Y} \right )d\tau\\ 
-			&= \fourier{f}{Y} \ft{\tau}{x(\tau)}{f}\\
-			&= \fourier{f}{X} \fourier{f}{Y}\\
+			&= \fint x(\tau) \left ( e^{-2\pi if\tau}\fourier{t}{Y}{f} \right )d\tau\\ 
+			&= \fourier{t}{Y}{f} \ft{\tau}{x(\tau)}{f}\\
+			&= \fourier{t}{X}{f} \fourier{\tau}{Y}{f}\\
 			&= X(f)Y(f)
 	\end{aligned}
 \end{equation}
 by the same token,
 \begin{equation}
 	\begin{aligned}[b]
-		\fourier{t}{x(t)y(t)}
+		\fourier{t}{x(t)y(t)}{f}
 			&= X(f)*Y(f)
 			\label{eq:ftconv}
 	\end{aligned}
@@ -417,7 +417,7 @@ Here you can see convolutions can be used to make FT easier \cite{james}.
 Consider \(x(t) = s(t)u(t)\) discussed in section \ref{sec:su} again. We already showed that \(X(f)\) is \eqref{eq:ftsu}. We can also see that, by applying \eqref{eq:ftconv}, 
 \begin{equation}
 	\begin{aligned}[b]
-		\fourier{t}{su}
+		\fourier{t}{su}{f}
 		&= S(f)*U(f)\\
 		&= \conv{f}{\xi}{S}{U}\\
 		&= \fint S(\xi) 
@@ -440,16 +440,41 @@ In other words,
 We will now consider a specific function, in this case, SED function discussed in section 1, \(x = \sed{t}{x}\). The FT of \(x\) is (with \(1/T = r\)) as follows:
 \begin{equation}
 	\begin{aligned}[b]
-		X(f)	&= \fourier{t}{x}\\
-			&= \fourier{t}{\sed{t}{x}}\\
-			&= x_{0}\fourier{t}{e^{-rt} \theta (t)}(f - f_{0})\\
+		X(f)	&= \fourier{t}{x}{f}\\
+			&= \fourier{t}{\sed{t}{x}}{f}\\
+			&= x_{0}\fourier{t}{e^{-rt} \theta (t)}{f - f_{0}}\\
 			&= \frac{x_{0}}{r + 2\pi i(f - f_{0})} \\
 			\gdef\temp{r^2 + 4\pi^{2}(f - f_{0})^2} % temporary macro
 			&= x_{0}\frac{r - 2\pi i(f - f_{0})}{\temp}\\
 			&= x_{0}\left[\frac{r}{\temp} + i\frac{2\pi(f_{0} - f)}{\temp} \right]
 	\end{aligned}
 \end{equation}
-The maximum of \(X(f)\), which is at \(f_{0}\), is \(x_{0}/r\).
+The real part of \(X\) is called \emph{Lorentzian}, and the maximum of it, which is at \(f_{0}\), is \(x_{0}/r\) (Lorentzian plot is in figure \ref{fig2}, and the imaginary part is in figure \ref{fig3}). The width of Lorentzian is usually measured by \emph{full width half maximum} or \emph{FWHM} for short. FWHM represents the width of a peak or a pulse at its half-maximum points. To determine the FWHM, you identify the points on the curve or distribution where the value is half of its maximum value. Then, the FWHM is calculated as the difference between the x-values (or time intervals) corresponding to these two points. The figure \ref{fig4} shows FWHM of Lorentzian, with width \(r/\pi\).
+
+% figure for Lorentzian function
+\begin{figure}[H]
+	\centering
+	\includegraphics[height=5in]{Lorentzian_R.eps}
+	\caption{Lorentzian, X vs. f}
+	\label{fig2}
+\end{figure}
+
+% figure for imaginary part of FT of SED function
+\begin{figure}[H]
+	\centering
+	\includegraphics[height=5in]{Lorentzian_L.eps}
+	\caption{Imaginary part of FT SED, X vs. f}
+	\label{fig3}
+\end{figure}
+
+% figure for imaginary part of FT of SED function
+\begin{figure}[H]
+	\centering
+	\includegraphics[height=5in]{FWHM.eps}
+	\caption{FWHM of X}
+	\label{fig4}
+\end{figure}
+
 % 2.9 End of the section 2
 \clearpage
 
@@ -462,14 +487,14 @@ Unlike continuous FT, discrete FT, or DFT in short, converts a finite sequence \
 Consider a sequence \(\{x_{n}\}\). Then DFT of \(x_{n}\) is:
 \begin{equation}
 	\begin{aligned}[b]
-		X_{k}	&= \fourier{}{x_{n}}\\
+		X_{k}	&= \fourier{n}{x_{n}}{k}\\
 			&= \dft{n}{x_{n}\,}{k}
 	\end{aligned}
 \end{equation}
 The inverse DFT of \(X_{k}\) is:
 \begin{equation}
 	\begin{aligned}[b]
-		\ifourier{}{X_{k}}
+		\ifourier{k}{X_{k}}{n}
 			&= \idft{k}{X_{k}}{n}\\
 			&= \idft{k}{\dft{p}{x_{p}\,}{k}}{n}\\
 			&= \ssum{p} x_{p} \frac{1}{N}\ssum{k} e^{2\pi ik(n-p)/N}\\
@@ -477,7 +502,7 @@ The inverse DFT of \(X_{k}\) is:
 			&= x_{n}
 	\end{aligned}
 \end{equation}
-Where I used the orthogonal relation \eqref{eq:kronecker}\cite{james}. There is another version of DFT called discrete-time Fourier transform (DTFT in short)\index{discrete-time Fourier transform}. The only difference is that the sum runs from negative infinity to positive infinity with a continuous domain (the example is \eqref{eq:ftsu}, which is DTFT of \(\Delta t\cdot s(n\Delta t)\) whose element of the domain is \(f\Delta t\)). 
+Where I used the orthogonal relation \eqref{eq:kronecker}\cite{james}. For DFT, I used the same notation of CTFT and it is understood which FT it applies to depending on the context. There is another version of DFT called discrete-time Fourier transform (DTFT in short)\index{discrete-time Fourier transform}. The only difference is that the sum runs from negative infinity to positive infinity with a continuous domain (the example is \eqref{eq:ftsu}, which is DTFT of \(\Delta t\cdot s(n\Delta t)\) whose element of the domain is \(f\Delta t\)). 
 
 % 3.2 Approximation of DFT
 \subsection{Approximation of DFT}
@@ -498,7 +523,7 @@ Now suppose that \(x(t) = 0\) for all \(t < 0\) and \(x(t) \approx 0\) after som
 Which is just DFT of \(x_{n}\). We can take this analogy further with CTFT. Consider \(x(t)=f_{s} s(t)u(t)\) such that \(s(t)\) has the properties that \(x(t)\) has described above (for example, SED function) and \(u(t)\) is a sampling function with the sampling rate \(f_{s}\). Then we know from \eqref{eq:ftsu} that
 \begin{equation}
 	\begin{aligned}[b]
-		\fourier{t}{x}
+		\fourier{t}{x}{f}
 			&= \fsum{n} s_{n} e^{-2\pi ifn\Delta t} 
 	\end{aligned}
 \end{equation}
