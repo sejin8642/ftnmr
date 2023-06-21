@@ -125,6 +125,8 @@ class spectrometer():
         Exponent of 10 to convert seconds into miliseconds or microseconds
     w_l: float
         angular Larmor frequency
+    f_l: float
+        regular Larmor frequency (w_l/2pi)
     f_s: float
         Sampling frequency for frequency-adjusted signal
     dt: float
@@ -141,9 +143,14 @@ class spectrometer():
     df: float
         Frequency resolution of FFT in <f_unit> unit
     nf: int
-        Number of FFT output
+        Total number of FFT-processed signal output of the spectrometer. This number is different 
+        from 2^p which is the total number of FFT input data. 2^p number of data is FFT-processed,
+        and the output of FFT has the same size of 2^p. But the spectrometer will truncate the data
+        if nf is smaller than 2^p
     f: numpy array[float]
-        Frequency domain for FFT output in <f_unit> unit
+        Frequency domain for FFT output in <f_unit> unit. Even though the frequency range is much
+        smaller than regular Larmor frequency, detected frequency falls within f as the detected
+        frequency is chemically shifted regular Larmor frequency minus some reference frequency
     shift: numpy array[float]
         Chemical shift doamin for FFT output
     hr: float
@@ -156,8 +163,10 @@ class spectrometer():
         Data type for shift and spectra
     noise: complex float
         Signal noise
-    splits: list[tuple(float, float)]
-        List of angular Larmor frequencies and relative abundances for sample molecules
+    splits: list[tuple(float, float, float)]
+        List of relative angular Larmor frequencies(detected angular Larmor frequency minus reference
+        angular Larmor frequency),  relative abundances, and relaxivities for sample molecules. 
+        splits is created once sampe molecules are measured
     signal: numpy array[compelx float]
         NMR sample signal
     FFT: numpy array[complex float]
@@ -218,8 +227,9 @@ class spectrometer():
             determine sampling rate as sampling rate sets the maximum frequency of FFT output region
         shift_minimum: float
             Minimum chemical shift that the frequency range of FFT must include (default 15.0)
-            Remember that FFT calculation output is truncated to yield spectrometer FFT output so that 
-            the spectrometer FFT output range is set to include shift_minimum
+            Remember that FFT calculation output is truncated to yield spectrometer FFT output such that 
+            the spectrometer FFT output range is set to include shift_minimum and to be much smaller than
+            shift_maximum
         t_cut: float
             Cutoff time period that signal sampling duration, t, must exceed (default 1500.0)
             This will determine how long the spectrometer will measure the signal. Together with f_min
@@ -245,6 +255,7 @@ class spectrometer():
         self.shift_cutoff = shift_maximum*pow(2, -self.p_l)
         self.f_unit, self.ep = self.unit(timeunit)
         self.w_l = self.gamma*B*pow(10, self.ep)
+        self.f_l = self.ip2*self.w_l
         self.f_s = self.ip2*shift_maximum*pow(10, -6)*self.w_l
         self.dt = 1/self.f_s
         self.ns, self.p, self.t = self.time(t_cut, f_min)
