@@ -161,8 +161,10 @@ class spectrometer():
         Standard deviation of signal noise
     dtype: str
         Data type for shift and spectra
-    noise: complex float
+    noise: numpy array[complex float]
         Signal noise
+    clean_signal: numpy array[complex float]
+        NMR sample signal without any noise
     splits: list[tuple(float, float, float)]
         List of relative angular Larmor frequencies(detected angular Larmor frequency minus reference
         angular Larmor frequency),  relative abundances, and relaxivities for sample molecules. 
@@ -351,23 +353,25 @@ class spectrometer():
                 dtype=dtype)
 
     # spectrometer artifact method
-    def artifact(self, baseline=False):
+    def artifact(
+            self, 
+            baseline=False,
+            phaseShift=False):
         """
         Artifact method
 
         For now, only baseline distortion artifact is implemented
+        phase shift is next to be added here
 
         Parameters
         ----------
         Baseline: Bool
             If true, baseline distortion artifact is created
-
-        Returns
-        -------
-        splev: numpy array[float]
-            Linear or spline interpolation for baselinse distortion artifact
+        phaseShift: Bool
+            If true, indepedent random phase shifts to each hydrogen is added separately
         """
         self.spectra_artifact = np.zeros(self.nf)
+        self.phase_shift = phaseShift 
 
         if baseline:
             n = np.random.randint(2, 25)
@@ -420,14 +424,22 @@ class spectrometer():
        
         # Final signal and its spectra (FFT of signal) from all hydrogen FID
         self.splits = A
-        separate_fid = [N*np.exp(1j*w*self.t)*np.exp(-r*self.t) for w, N, r in A] 
 
+        # adding random phase shift [0, 2pi) if phase_shift is true
+        if self.phase_shift:
+            ps = lambda: 2*np.pi*np.random.rand()
+            separate_fid = [N*np.exp(1j*(w*self.t + ps()))*np.exp(-r*self.t) for w, N, r in A] 
+        else:
+            separate_fid = [N*np.exp(1j*w*self.t)*np.exp(-r*self.t) for w, N, r in A] 
+
+        # adding noise to the raw signal if noise is true
         self.noise = np.zeros(self.ns, dtype=np.complex128)
         if noise:
             self.noise += np.random.normal(0, self.std, self.ns)+ \
                           1j*np.random.normal(0, self.std, self.ns)
 
-        self.signal = self.dt*self.r*np.sum(separate_fid, axis=0) + self.noise
+        self.clean_signal = self.dt*self.r*np.sum(separate_fid, axis=0)
+        self.signal = self.clean_signal + self.noise
         self.FFT = np.fft.fft(self.signal, n=pow(2, self.p))[:self.nf]
         self.target = self.FFT.real.astype(self.dtype)
         self.spectra = self.target + self.spectra_artifact.astype(self.dtype)
