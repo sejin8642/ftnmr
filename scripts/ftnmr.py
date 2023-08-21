@@ -147,6 +147,8 @@ class spectrometer():
         from 2^p which is the total number of FFT input data. 2^p number of data is FFT-processed,
         and the output of FFT has the same size of 2^p. But the spectrometer will truncate the data
         if nf is smaller than 2^p
+    w_max: float
+        Maximum angular frequency you can observe on hydrogen in your final processed signal
     f: numpy array[float]
         Frequency domain for FFT output in <f_unit> unit. Even though the frequency range is much
         smaller than regular Larmor frequency, detected frequency falls within f as the detected
@@ -163,22 +165,34 @@ class spectrometer():
         Data type for shift and spectra
     noise: numpy array[complex float]
         Signal noise
-    clean_signal: numpy array[complex float]
-        NMR sample signal without any noise
+    target_signal: numpy array[complex float]
+        NMR signal without any artifacts (it could be noiseless if smoothness == True)
     splits: list[tuple(float, float, float)]
         List of relative angular Larmor frequencies(detected angular Larmor frequency minus reference
         angular Larmor frequency),  relative abundances, and relaxivities for sample molecules. 
         splits is created once sampe molecules are measured
     signal: numpy array[compelx float]
         NMR sample signal
+    target_signal: numpy array[compelx float]
+        NMR sample signal without artifacts (it could be noiseless as well)
     FFT: numpy array[complex float]
         FFT output of the signal
+    target_FFT: numpy array[complex float]
+        FFT output of the target signal 
     spectra_artifact: numpy array[float]
-        Spectra artifact
+        Spectra artifact 
     target: numpy array[float]
-        NMR spectra output without the artifact
+        NMR spectra target output without the artifact (real part of target_FFT)
     spectra: numpy array[complex float]
-        NMR spectra output with the artifact and noise
+        NMR spectra output with the artifact and noise (real part of FFT)
+    baseline: bool
+        Baseline artifact is present if True (default False)
+    phase_shift: bool
+        Phase shift (zero and first orders) is applied to detected hydrogens if True (default False)
+    smoothness: bool
+        The target (as opposed to real) measurement output is noiseless if True (default False)
+        Noise is inherently present in the real data. If for inspectin purpose, set noise=False
+        for measure method
 
     Methods
     -------
@@ -210,7 +224,10 @@ class spectrometer():
             RH=12,
             r=0.005,
             std=0.00005,
-            dtype='float32'):
+            dtype='float32',
+            baseline=False,
+            phase_shift=False,
+            smoothness=False):
         """ spectrometer constructor
 
         Parameters
@@ -263,12 +280,18 @@ class spectrometer():
         self.ns, self.p, self.t = self.time(t_cut, f_min)
         self.df = self.f_s*pow(2, -self.p)
         self.nf = pow(2, self.p-self.p_l)
+        self.w_max = 2*np.pi*self.nf*self.nf
         self.f = self.df*np.arange(0, self.nf)
         self.shift = ((self.shift_cutoff/self.nf)*np.arange(0, self.nf)).astype(dtype)
         self.hr = 1/RH
         self.r = r
         self.std = std
         self.dtype = dtype
+        self.baseline=baseline
+        self.phase_shift=phase_shift
+        self.smoothness=smoothness
+        self.noise = np.zeros(self.ns, dtype=np.complex128)
+        self.spectra_artifact = np.zeros(self.nf)
 
     # spectrometer unit method
     def unit(self, timeunit):
@@ -334,7 +357,9 @@ class spectrometer():
             f_min=0.2,
             RH=12,
             std=0.00005,
-            dtype='float32'):
+            dtype='float32',
+            baseline=False,
+            phase_shift=False):
         """
         Spectrometer calibrate method
 
@@ -350,13 +375,16 @@ class spectrometer():
                 f_min=f_min,
                 RH=RH,
                 std=std,
-                dtype=dtype)
+                dtype=dtype,
+                baseline=baseline,
+                phase_shift=phase_shift)
 
     # spectrometer artifact method
     def artifact(
-            self, 
+            self,
             baseline=False,
-            phaseShift=False):
+            phase_shift=False,
+            smoothness=False):
         """
         Artifact method
 
@@ -368,10 +396,9 @@ class spectrometer():
         Baseline: Bool
             If true, baseline distortion artifact is created
         phaseShift: Bool
-            If true, indepedent random phase shifts to each hydrogen is added separately
+            If true, phase shift (zero and first order) is applied to hydrogens
         """
-        self.spectra_artifact = np.zeros(self.nf)
-        self.phase_shift = phaseShift 
+        self.baseline = baseline
 
         if baseline:
             n = np.random.randint(2, 25)
@@ -391,6 +418,9 @@ class spectrometer():
                 self.spectra_artifact += interpolate.splev(self.shift, tck, der=0)
             else: 
                 self.spectra_artifact += ( (y[-1] - y[0])/self.shift_cutoff*self.shift + y[0] )
+
+        self.phase_shift = phase_shift 
+        self.smoothness = smoothness
 
     # spectrometer measure method
     def measure(self, moles, noise=True):
@@ -422,27 +452,43 @@ class spectrometer():
             for x in moles for y in moles[x][0].splits
             for z, k in zip(moles[x][0].splits[y][0], moles[x][0].splits[y][1])]
        
-        # Final signal and its spectra (FFT of signal) from all hydrogen FID
         self.splits = A
-
-        # adding random phase shift [0, 2pi) if phase_shift is true
+        
+        # Separate FID list is created. Target FID is for training DNN
+        # Add zero or first order phase shift [0, pi/2) if phase_shift is true
         if self.phase_shift:
-            ps = lambda: 2*np.pi*np.random.rand()
-            separate_fid = [N*np.exp(1j*(w*self.t + ps()))*np.exp(-r*self.t) for w, N, r in A] 
+            random_number = np.random.uniform(0, 1)
+            if random_number < 0.25:
+                S = np.random.uniform(0, 0.25*np.pi/self.w_max) # slope for first order phase shift
+            elif 0.75 < random_number:
+                T = np.random.uniform(0, 0.25*np.pi) # y-intercept for zero order phase shift
+            else:
+                S = np.random.uniform(0, 0.25*np.pi/self.w_max) 
+                T = np.random.uniform(0, 0.25*np.pi) 
+
+            separate_fid = [N*np.exp(1j*(w*self.t + S*w + T))*np.exp(-r*self.t) for w, N, r in A] 
+            target_fid = [N*np.exp(1j*w*self.t)*np.exp(-r*self.t) for w, N, r in A] 
         else:
             separate_fid = [N*np.exp(1j*w*self.t)*np.exp(-r*self.t) for w, N, r in A] 
-
+            target_fid = separate_fid
+            
         # adding noise to the raw signal if noise is true
-        self.noise = np.zeros(self.ns, dtype=np.complex128)
         if noise:
             self.noise += np.random.normal(0, self.std, self.ns)+ \
                           1j*np.random.normal(0, self.std, self.ns)
 
-        self.clean_signal = self.dt*self.r*np.sum(separate_fid, axis=0)
-        self.signal = self.clean_signal + self.noise
+        # Final signal and its spectra (FFT of signal) from all hydrogen FID
+        if self.smoothness == True:
+            self.target_signal = self.dt*self.r*np.sum(target_fid, axis=0)
+        else:
+            self.target_signal = self.dt*self.r*np.sum(target_fid, axis=0) + self.noise
+        self.signal = self.dt*self.r*np.sum(separate_fid, axis=0) + self.noise
+
+        # DFT calculations
         self.FFT = np.fft.fft(self.signal, n=pow(2, self.p))[:self.nf]
-        self.target = self.FFT.real.astype(self.dtype)
-        self.spectra = self.target + self.spectra_artifact.astype(self.dtype)
+        self.target_FFT = np.fft.fft(self.target_signal, n=pow(2, self.p))[:self.nf]
+        self.spectra = self.FFT.real.astype(self.dtype) + self.spectra_artifact.astype(self.dtype)
+        self.target = self.target_FFT.real.astype(self.dtype)
 
     def __repr__(self):
         return "Spectrometer class that measures a sample solution with organic molecules in it"
