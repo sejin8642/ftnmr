@@ -165,6 +165,11 @@ class spectrometer():
         Data type for shift and spectra
     noise: numpy array[complex float]
         Signal noise
+    ps: numpy array[float]
+        Zero and first order phase parameters for phast shift (default 0 for both)
+    smooth: int
+        1 if target signal is noiseless, and 0 if target signal also has the noise
+        The noise is the same as raw signal noise
     target_signal: numpy array[complex float]
         NMR signal without any artifacts (it could be noiseless if smoothness == True)
     splits: list[tuple(float, float, float)]
@@ -185,14 +190,6 @@ class spectrometer():
         NMR spectra target output without the artifact (real part of target_FFT)
     spectra: numpy array[complex float]
         NMR spectra output with the artifact and noise (real part of FFT)
-    baseline: bool
-        Baseline artifact is present if True (default False)
-    phase_shift: bool
-        Phase shift (zero and first orders) is applied to detected hydrogens if True (default False)
-    smoothness: bool
-        The target (as opposed to real) measurement output is noiseless if True (default False)
-        Noise is inherently present in the real data. If for inspectin purpose, set noise=False
-        for measure method
 
     Methods
     -------
@@ -287,10 +284,9 @@ class spectrometer():
         self.r = r
         self.std = std
         self.dtype = dtype
-        self.baseline=baseline
-        self.phase_shift=phase_shift
-        self.smoothness=smoothness
         self.noise = np.zeros(self.ns, dtype=np.complex128)
+        self.ps = np.zeros(2)
+        self.smooth = 0
         self.spectra_artifact = np.zeros(self.nf)
 
     # spectrometer unit method
@@ -394,12 +390,15 @@ class spectrometer():
         Parameters
         ----------
         Baseline: Bool
-            If true, baseline distortion artifact is created
+            If true, baseline distortion artifact is created (default False)
         phaseShift: Bool
-            If true, phase shift (zero and first order) is applied to hydrogens
+            If true, phase shift (zero and first order) is applied to hydrogens (default False)
+        smoothness: Bool
+            The target (as opposed to real) measurement output is noiseless if True (default False)
+            Noise is inherently present in the real data. If for inspectin purpose, set noise=False
+            for measure method
         """
-        self.baseline = baseline
-
+        # add baseline artifact to the final spectra
         if baseline:
             n = np.random.randint(2, 25)
             sd = 0.15
@@ -418,9 +417,29 @@ class spectrometer():
                 self.spectra_artifact += interpolate.splev(self.shift, tck, der=0)
             else: 
                 self.spectra_artifact += ( (y[-1] - y[0])/self.shift_cutoff*self.shift + y[0] )
+        else:
+            self.spectra_artifact = np.zeros(self.nf)
 
-        self.phase_shift = phase_shift 
-        self.smoothness = smoothness
+        # add phase shift to the raw signal
+        if phase_shift:
+            random_number = np.random.uniform(0, 1)
+            if random_number < 0.25:
+                # slope for first order phase shift
+                self.ps[0] = np.random.uniform(0, 0.125*np.pi/self.w_max)             
+                # y-intercept for zero order phase shift
+                self.ps[1] = 0
+            elif 0.75 < random_number:
+                self.ps[0] = 0
+                self.ps[1] = np.random.uniform(0, 0.125*np.pi) 
+            else:
+                self.ps[0] = np.random.uniform(0, 0.125*np.pi/self.w_max) 
+                self.ps[1] = np.random.uniform(0, 0.125*np.pi) 
+
+        # noiseless target signal
+        if smoothness == True:
+            self.smooth = 1
+        else:
+            self.smooth = 0
 
     # spectrometer measure method
     def measure(self, moles, noise=True):
@@ -432,8 +451,15 @@ class spectrometer():
         moles: dict[str]:(molecule, float)
             Dictionary that contains multiple molecule objects with their relative abundances.
         noise: bool
-            If true, noise is introduced with std
+            If True, noise is introduced with std
         """
+        t = self.t # measurement time period for notation readability
+
+        # adding noise to the raw signal if noise is true
+        if noise:
+            real_noise = np.random.normal(0, self.std, self.ns)
+            imag_noise = np.random.normal(0, self.std, self.ns)
+            self.noise = real_noise + 1j*imag_noise 
 
         # relaxivities for corresponding hydrogen groups
         relaxivity = {x:{y: 1/moles[x][0].hydrogens[y][2] for y in moles[x][0].hydrogens} 
@@ -454,35 +480,14 @@ class spectrometer():
        
         self.splits = A
         
-        # Separate FID list is created. Target FID is for training DNN
-        # Add zero or first order phase shift [0, pi/2) if phase_shift is true
-        if self.phase_shift:
-            random_number = np.random.uniform(0, 1)
-            if random_number < 0.25:
-                S = np.random.uniform(0, 0.25*np.pi/self.w_max) # slope for first order phase shift
-            elif 0.75 < random_number:
-                T = np.random.uniform(0, 0.25*np.pi) # y-intercept for zero order phase shift
-            else:
-                S = np.random.uniform(0, 0.25*np.pi/self.w_max) 
-                T = np.random.uniform(0, 0.25*np.pi) 
-
-            separate_fid = [N*np.exp(1j*(w*self.t + S*w + T))*np.exp(-r*self.t) for w, N, r in A] 
-            target_fid = [N*np.exp(1j*w*self.t)*np.exp(-r*self.t) for w, N, r in A] 
-        else:
-            separate_fid = [N*np.exp(1j*w*self.t)*np.exp(-r*self.t) for w, N, r in A] 
-            target_fid = separate_fid
+        S, T = self.ps  # Add zero or first order phase shift [0, pi/4) if phase_shift is true
+        # Separate FID list is created. Target FID is what we aim to get from DNN
+        separate_fid = [N*np.exp(1j*(w*t + S*w + T))*np.exp(-r*t) for w, N, r in A] 
+        target_fid = [N*np.exp(1j*w*t)*np.exp(-r*t) for w, N, r in A] 
             
-        # adding noise to the raw signal if noise is true
-        if noise:
-            self.noise += np.random.normal(0, self.std, self.ns)+ \
-                          1j*np.random.normal(0, self.std, self.ns)
-
         # Final signal and its spectra (FFT of signal) from all hydrogen FID
-        if self.smoothness == True:
-            self.target_signal = self.dt*self.r*np.sum(target_fid, axis=0)
-        else:
-            self.target_signal = self.dt*self.r*np.sum(target_fid, axis=0) + self.noise
         self.signal = self.dt*self.r*np.sum(separate_fid, axis=0) + self.noise
+        self.target_signal = self.dt*self.r*np.sum(target_fid, axis=0) + self.smooth*self.noise
 
         # DFT calculations
         self.FFT = np.fft.fft(self.signal, n=pow(2, self.p))[:self.nf]
