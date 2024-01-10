@@ -389,7 +389,7 @@ class spectrometer():
 
         Parameters
         ----------
-        Baseline: Bool
+        baseline: Bool
             If true, baseline distortion artifact is created (default False)
         phaseShift: Bool
             If true, phase shift (zero and first order) is applied to hydrogens (default False)
