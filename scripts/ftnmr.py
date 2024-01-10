@@ -391,12 +391,12 @@ class spectrometer():
         ----------
         baseline: Bool
             If true, baseline distortion artifact is created (default False)
-        phaseShift: Bool
+        phase_shift: Bool
             If true, phase shift (zero and first order) is applied to hydrogens (default False)
         smoothness: Bool
-            The target (as opposed to real) measurement output is noiseless if True (default False)
-            Noise is inherently present in the real data. If for inspectin purpose, set noise=False
-            for measure method
+            The target (as opposed to real) signal measurement output is noiseless if True 
+            (default False). Noise is inherently present in the real data. For inspectin, set 
+            noise=False for measure method
         """
         # add baseline artifact to the final spectra
         if baseline:
