@@ -168,7 +168,7 @@ class spectrometer():
     ps: numpy array[float]
         Zero and first order phase parameters for phast shift (default 0 for both)
     smooth: int
-        1 if target signal is noiseless, and 0 if target signal also has the noise
+        0 if target signal is noiseless, and 1 if target signal also has the noise
         The noise is the same as raw signal noise
     target_signal: numpy array[complex float]
         NMR signal without any artifacts (it could be noiseless if smoothness == True)
@@ -190,6 +190,9 @@ class spectrometer():
         NMR spectra target output without the artifact (real part of target_FFT)
     spectra: numpy array[complex float]
         NMR spectra output with the artifact and noise (real part of FFT)
+    measurement: bool
+        False if no measurement is conducted yet (default False). Once measure method is invoked
+        it becomes True
 
     Methods
     -------
@@ -288,6 +291,7 @@ class spectrometer():
         self.ps = np.zeros(2)
         self.smooth = 0
         self.spectra_artifact = np.zeros(self.nf)
+        self.measurement = False
 
     # spectrometer unit method
     def unit(self, timeunit):
@@ -395,7 +399,7 @@ class spectrometer():
             If true, phase shift (zero and first order) is applied to hydrogens (default False)
         smoothness: Bool
             The target (as opposed to real) signal measurement output is noiseless if True 
-            (default False). Noise is inherently present in the real data. For inspectin, set 
+            (default False). Noise is inherently present in the real data. For inspection, set 
             noise=False for measure method
         """
         # add baseline artifact to the final spectra
@@ -435,11 +439,11 @@ class spectrometer():
                 self.ps[0] = np.random.uniform(0, 0.125*np.pi/self.w_max) 
                 self.ps[1] = np.random.uniform(0, 0.125*np.pi) 
 
-        # noiseless target signal
+        # noiseless target signal if true
         if smoothness == True:
-            self.smooth = 1
-        else:
             self.smooth = 0
+        else:
+            self.smooth = 1
 
     # spectrometer measure method
     def measure(self, moles, noise=True):
@@ -453,6 +457,7 @@ class spectrometer():
         noise: bool
             If True, noise is introduced with std
         """
+        self.measurement = True # to indicate that at least one measurement is done
         t = self.t # measurement time period for notation readability
 
         # adding noise to the raw signal if noise is true
@@ -604,4 +609,73 @@ class lorentzian():
     def __call__(self):
         """ returns lorentz """
         return self.lorentz
+
+def max_reduction(spec, data_length):
+    """
+    this function takes spectrometer object and returns the measured spectra and target with
+    reshaped size using max method. Reduced chemical shift range is also returned (chemical
+    shift range is still the same, only the number of data points are truncated)
+
+    Parameters
+    ----------
+    spectrometer: spectrometer object
+        spectrometer object with measured signal and spectra
+    data_length: int
+        size of resized spectrometer output. If the size is bigger than spectrometer.nf,
+        then the original output (spectro and target) will be returned. Make sure this number
+        is some power of two (eg, 2**10)
+
+    Returns
+    -------
+    spectra: numpy array[float] 
+        reshaped spectra of spectrometer
+    target: numpy array[float] 
+        reshaped target of spectrometer
+    chemical shift: numpy array[float]
+        chemical shift range, but fewer data points to match the data size
+    """
+    assert spec.measurement == True, "spectrometer has no measurement"
+    rescale_ratio = int(spec.nf/data_length)
+
+    if  spec.nf <= data_length:
+        return spec()
+    else:
+        target = np.reshape(spec.target, (data_length, rescale_ratio))
+        spectra = np.reshape(spec.spectra, (data_length, rescale_ratio))
+        return np.max(spectra, axis=1), np.max(target, axis=1), spec.shift[::rescale_ratio]
+
+def mean_reduction(spec, data_length):
+    """
+    this function takes spectrometer object and returns the measured spectra and target with
+    reshaped size using mean method. Reduced chemical shift range is also returned (chemical
+    shift range is still the same, only the number of data points are truncated)
+
+    Parameters
+    ----------
+    spectrometer: spectrometer object
+        spectrometer object with measured signal and spectra
+    data_length: int
+        size of resized spectrometer output. If the size is bigger than spectrometer.nf,
+        then the original output (spectro and target) will be returned. Make sure this number
+        is some power of two (eg, 2**10)
+
+    Returns
+    -------
+    spectra: numpy array[float] 
+        reshaped spectra of spectrometer
+    target: numpy array[float] 
+        reshaped target of spectrometer
+    chemical shift: numpy array[float]
+        chemical shift range, but fewer data points to match the data size
+    """
+    assert spec.measurement == True, "spectrometer has no measurement"
+    rescale_ratio = int(spec.nf/data_length)
+
+    if  spec.nf <= data_length:
+        return spec()
+    else:
+        target = np.reshape(spec.target, (data_length, rescale_ratio))
+        spectra = np.reshape(spec.spectra, (data_length, rescale_ratio))
+        return np.mean(spectra, axis=1), np.mean(target, axis=1), spec.shift[::rescale_ratio]
+
 
