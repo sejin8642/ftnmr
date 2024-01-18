@@ -4,15 +4,19 @@ Keeler pg.49 for general signal form
 proton gyromagnetic ratio: https://physics.nist.gov/cgi-bin/cuu/Value?gammap
 """
 
+from itertools import product
+import fid
+from pathlib import Path
+import h5py
+
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy
 from scipy.special import binom
-from itertools import product
 from scipy.stats import truncnorm
 from scipy import interpolate
 
-import fid
+import tensorflow as tf
 
 # Larmor angular frequency function
 def larmor(B=1.5, unit='MHz'):
@@ -678,4 +682,85 @@ def mean_reduction(spec, data_length):
         spectra = np.reshape(spec.spectra, (data_length, rescale_ratio))
         return np.mean(spectra, axis=1), np.mean(target, axis=1), spec.shift[::rescale_ratio]
 
+def load_spec_data(
+        directory, 
+        batch_size=32,
+        numpy_array=False):
+    """
+    this function loads data from hdf5 files in a directory and returns datasets as either
+    numpy arrays or TF datasets. The directory must contain hdf5 files, the total number of which 
+    must be 10*2**p where p is a positive integer. This ensures that datasets of train, valid, and 
+    test are 80%, 10%, and 10% each. 
+    """
+    # get all hdf5 file paths and make sure that there are more than 10 hdf5 files
+    data_dir = Path(directory)
+    file_paths = data_dir.glob('*.hdf5')
+    hdf5_files = [str(file) for file in file_paths]    
+    assert 9 < len(hdf5_files), "there are fewer than 10 hdf5 files"
+
+    # making sure that the number of hdf5 files are 10*2**p where p is a positive integer
+    p = np.log2(len(hdf5_files)/10)
+    assert p.is_integer(), "number of hdf5 files are not 10*2**p where p is a positive int"
+
+    # create train, valid, and test hdf5 file path lists separately
+    train_num = int(8*2**p)
+    valid_num = int(2**p)
+    train_data_files = hdf5_files[:train_num]
+    valid_data_files = hdf5_files[train_num:train_num+valid_num]
+    test_data_files = hdf5_files[-valid_num:]
+
+    # obtain number of data in each hdf5 file ans its data type and length
+    with h5py.File(hdf5_files[0], 'r') as f:
+        dtype = f['data'].dtype
+        num_samples = f['data'].shape[0]
+        data_length = f['data'].shape[1]
+
+    # set buffer size based on the number of data in each hdf5 file
+    buffer_size = int(num_samples/32)
+
+    # preallocate numpy arrays for data
+    X_train = np.zeros((num_samples*train_num, data_length), dtype=dtype)
+    y_train = np.zeros((num_samples*train_num, data_length), dtype=dtype)
+
+    X_valid = np.zeros((num_samples*valid_num, data_length), dtype=dtype)
+    y_valid = np.zeros((num_samples*valid_num, data_length), dtype=dtype)
+
+    X_test = np.zeros((num_samples*valid_num, data_length), dtype=dtype)
+    y_test = np.zeros((num_samples*valid_num, data_length), dtype=dtype)
+
+    # load the data into numpy arrays
+    for index, file_path in enumerate(train_data_files):
+        start = num_samples*index
+        with h5py.File(file_path, 'r') as f:
+            X_train[start:start+num_samples] = f['data'][:]
+            y_train[start:start+num_samples] = f['target'][:]
+
+    for index, file_path in enumerate(valid_data_files):
+        start = num_samples*index
+        with h5py.File(file_path, 'r') as f:
+            X_valid[start:start+num_samples] = f['data'][:]
+            y_valid[start:start+num_samples] = f['target'][:]
+
+    for index, file_path in enumerate(test_data_files):
+        start = num_samples*index
+        with h5py.File(file_path, 'r') as f:
+            X_test[start:start+num_samples] = f['data'][:]
+            y_test[start:start+num_samples] = f['target'][:]
+
+    # sometimes numpy array dataset is needed
+    if numpy_array == True:
+        return X_train, y_train, X_valid, y_valid, X_test, y_test 
+
+    # create TF dataset shuffled, batched and prefetched
+    dataset_train = tf.data.Dataset.from_tensor_slices((X_train, y_train))
+    dataset_train = dataset_train.shuffle(buffer_size=buffer_size, seed=42)
+    dataset_train = dataset_train.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+
+    dataset_valid = tf.data.Dataset.from_tensor_slices((X_valid, y_valid))
+    dataset_valid = dataset_valid.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+
+    dataset_test = tf.data.Dataset.from_tensor_slices((X_test, y_test))
+    dataset_test = dataset_test.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+
+    return dataset_train, dataset_valid, dataset_test
 
