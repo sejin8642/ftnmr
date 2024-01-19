@@ -406,6 +406,9 @@ class spectrometer():
             (default False). Noise is inherently present in the real data. For inspection, set 
             noise=False for measure method
         """
+        # initialize spectra artifact
+        self.spectra_artifact = np.zeros(self.nf)
+        
         # add baseline artifact to the final spectra
         if baseline:
             n = np.random.randint(2, 25)
@@ -425,8 +428,6 @@ class spectrometer():
                 self.spectra_artifact += interpolate.splev(self.shift, tck, der=0)
             else: 
                 self.spectra_artifact += ( (y[-1] - y[0])/self.shift_cutoff*self.shift + y[0] )
-        else:
-            self.spectra_artifact = np.zeros(self.nf)
 
         # add phase shift to the raw signal
         if phase_shift:
@@ -497,6 +498,12 @@ class spectrometer():
         # Final signal and its spectra (FFT of signal) from all hydrogen FID
         self.signal = self.dt*self.r*np.sum(separate_fid, axis=0) + self.noise
         self.target_signal = self.dt*self.r*np.sum(target_fid, axis=0) + self.smooth*self.noise
+
+        ###### any modification to the measured signal is done here ######
+
+
+
+        ##################################################################
 
         # DFT calculations
         self.FFT = np.fft.fft(self.signal, n=pow(2, self.p))[:self.nf]
