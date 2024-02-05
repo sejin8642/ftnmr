@@ -1,4 +1,0 @@
-Current Tasks
-*Need to create a LaTeX file for codes in ft directory
-
-04/29/2021
