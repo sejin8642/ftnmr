@@ -174,6 +174,10 @@ class spectrometer():
     smooth: int
         0 if target signal is noiseless, and 1 if target signal also has the noise
         The noise is the same as raw signal noise
+    extra_target: bool
+        If true, two target spectra will be returned instead of one (default False). The extra
+        target has different noise than the first one, and it is used to compare performance
+        between corrected spectrum and the different target spectrum
     target_signal: numpy array[complex float]
         NMR signal without any artifacts (it could be noiseless if smoothness == True)
     splits: list[tuple(float, float, float)]
@@ -192,6 +196,11 @@ class spectrometer():
         Spectra artifact 
     target: numpy array[float]
         NMR spectra target output without the artifact (real part of target_FFT)
+    target2: numpy array[float]
+        Second NMR spectra target output without the artifact (real part of target_FFT). This signal
+        is useful for comparing performance between corrected NMR spectrum and second NMR spectrum.
+        The second NMR spectra will have different noise than the first one (although they are the
+        same type of noise with the same STD)
     spectra: numpy array[complex float]
         NMR spectra output with the artifact and noise (real part of FFT)
     measurement: bool
@@ -228,10 +237,7 @@ class spectrometer():
             RH=12,
             r=0.005,
             std=0.00005,
-            dtype='float32',
-            baseline=False,
-            phase_shift=False,
-            smoothness=False):
+            dtype='float32'):
         """ spectrometer constructor
 
         Parameters
@@ -451,7 +457,7 @@ class spectrometer():
             self.smooth = 1
 
     # spectrometer measure method
-    def measure(self, moles, noise=True):
+    def measure(self, moles, noise=True, extra_target=False):
         """" 
         Measures FID signal from the sample
         
@@ -461,8 +467,13 @@ class spectrometer():
             Dictionary that contains multiple molecule objects with their relative abundances.
         noise: bool
             If True, noise is introduced with std
+        extra_target: bool
+            If true, two target spectra will be returned instead of one (default False). The extra
+            target has different noise than the first one, and it is used to compare performance
+            between corrected spectrum and the different target spectrum
         """
         self.measurement = True # to indicate that at least one measurement is done
+        self.extra_target=extra_target # to includate extra target with different noise
         t = self.t # measurement time period for notation readability
 
         # adding noise to the raw signal if noise is true
@@ -503,7 +514,16 @@ class spectrometer():
 
 
 
-        ##################################################################
+        # extra target to compare performance
+        if extra_target:
+            real_noise = np.random.normal(0, self.std, self.ns)
+            imag_noise = np.random.normal(0, self.std, self.ns)
+            noise2 = real_noise + 1j*imag_noise 
+            target_signal2 = self.dt*self.r*np.sum(target_fid, axis=0) + noise2
+            target_FFT2 = np.fft.fft(target_signal2, n=pow(2, self.p))[:self.nf]
+            self.target2 = target_FFT2.real.astype(self.dtype)
+        else:
+            self.target2 = None
 
         # DFT calculations
         self.FFT = np.fft.fft(self.signal, n=pow(2, self.p))[:self.nf]
@@ -516,7 +536,10 @@ class spectrometer():
 
     def __call__(self):
         try:
-            return self.spectra, self.target
+            if self.extra_target:
+                return self.spectra, self.target, self.target2
+            else:
+                return self.spectra, self.target
         except AttributeError:
             return None
 
