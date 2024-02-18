@@ -715,12 +715,10 @@ def mean_reduction(spec, data_length):
 def load_spec_data(
         directory, 
         batch_size=32,
-        numpy_array=False):
+        numpy_array=False,
+        extra_target=False):
     """
-    this function loads data from hdf5 files in a directory and returns datasets as either
-    numpy arrays or TF datasets. The directory must contain hdf5 files, the total number of which 
-    must be 10*2**p where p is a positive integer. This ensures that datasets of train, valid, and 
-    test are 80%, 10%, and 10% each. 
+    this function loads data from hdf5 files in a directory and returns datasets as either numpy arrays or TF datasets. The directory must contain hdf5 files, the total number of which must be 10*2**p where p is a positive integer. This ensures that datasets of train, valid, and test are 80%, 10%, and 10% each. 
 
     parameters
     ----------
@@ -732,6 +730,9 @@ def load_spec_data(
     numpy_array: bool
         If True, the function returns dataset as numpy arrays (default False). Otherwise the
         returned datasets are TF dataset
+    extra_target: bool
+        If True, there is one more target, namely target2, which is the same target as the first one,
+        but with different noise
 
     return
     ------
@@ -774,28 +775,42 @@ def load_spec_data(
     X_test = np.zeros((num_samples*valid_num, data_length), dtype=dtype)
     y_test = np.zeros((num_samples*valid_num, data_length), dtype=dtype)
 
+    if extra_target:
+        y_train2 = np.zeros((num_samples*train_num, data_length), dtype=dtype)
+        y_valid2 = np.zeros((num_samples*valid_num, data_length), dtype=dtype)
+        y_test2 = np.zeros((num_samples*valid_num, data_length), dtype=dtype)
+
     # load the data into numpy arrays
     for index, file_path in enumerate(train_data_files):
         start = num_samples*index
         with h5py.File(file_path, 'r') as f:
             X_train[start:start+num_samples] = f['data'][:]
             y_train[start:start+num_samples] = f['target'][:]
+            if extra_target:
+                y_train2[start:start+num_samples] = f['target2'][:]
 
     for index, file_path in enumerate(valid_data_files):
         start = num_samples*index
         with h5py.File(file_path, 'r') as f:
             X_valid[start:start+num_samples] = f['data'][:]
             y_valid[start:start+num_samples] = f['target'][:]
+            if extra_target:
+                y_valid2[start:start+num_samples] = f['target2'][:]
 
     for index, file_path in enumerate(test_data_files):
         start = num_samples*index
         with h5py.File(file_path, 'r') as f:
             X_test[start:start+num_samples] = f['data'][:]
             y_test[start:start+num_samples] = f['target'][:]
+            if extra_target:
+                y_test2[start:start+num_samples] = f['target2'][:]
 
     # sometimes numpy array dataset is needed
     if numpy_array == True:
-        return X_train, y_train, X_valid, y_valid, X_test, y_test 
+        if extra_target:
+            return X_train, y_train, y_train2,  X_valid, y_valid, y_valid2, X_test, y_test, y_test2 
+        else:
+            return X_train, y_train, X_valid, y_valid, X_test, y_test 
 
     # create TF dataset shuffled, batched and prefetched
     dataset_train = tf.data.Dataset.from_tensor_slices((X_train, y_train))
