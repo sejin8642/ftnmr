@@ -825,6 +825,46 @@ def load_spec_data(
 
     return dataset_train, dataset_valid, dataset_test
 
+def load_shift(hdf5_path):
+    """
+    returns chemical shift range from hdf5 path
+
+    parameter
+    ---------
+    hdf5_path: Path object or str
+        file path of chemical shift
+
+    return
+    ------
+    shift: numpy array
+        numpy array of chemical shift
+    """
+    with h5py.File(hdf5_path, 'r') as f:
+        shift = f['shift'][:]
+
+    return shift
+
+def HDF5_load(hdf5_path, batch_size=128, numpy_array=False, extra_target=False):
+    """
+    HDF5_load loads a single hdf5 file of NMR spectra and returns either TF dataset or Numpy array
+    """
+    with h5py.File(hdf5_path, 'r') as f:
+        X = f['data'][:]
+        y = f['target'][:]
+        if extra_target:
+            y2 = f['target2'][:]
+
+    # sometimes numpy array dataset is needed
+    if numpy_array == True:
+        if extra_target:
+            return X, y, y2
+        else:
+            return X, y
+    
+    dataset = tf.data.Dataset.from_tensor_slices((X, y))
+    dataset = dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+    return dataset
+
 def model_NMR(input_length, GRU_unit, first_filter_num, second_filter_num):
     """
     This function returns neural network model that first processes NMR spectral data using
@@ -851,7 +891,6 @@ def model_NMR(input_length, GRU_unit, first_filter_num, second_filter_num):
     """
     # check your input arguments are powers of 2
     l2 = np.log2
-    assert l2(input_length).is_integer(), "input_length is not a power of 2"
     assert l2(GRU_unit).is_integer(), "GRU_unit is not a power of 2"
     assert l2(first_filter_num).is_integer(), "first_filter_num is not a power of 2"
     assert l2(second_filter_num).is_integer(), "second_filter_num is not a power of 2"
@@ -893,3 +932,188 @@ def model_NMR(input_length, GRU_unit, first_filter_num, second_filter_num):
 
     model_output = keras.layers.Add()([seq_input, flat_output])
     return keras.Model(inputs=[seq_input], outputs=[model_output])
+
+def sliced_spec_data(
+        directory, 
+        batch_size=32,
+        slice_num=8,
+        numpy_array=False):
+    """
+    this function loads hdf5 files of NMR spectra and returns TF dataset or numpy array of them. Each data sample is sliced into slice_num (default 8) to reduce the input data length, but train each sliced chunk as if it is an instance of NMR spectrum. This helps to reduce the VRAM requirement.
+
+    parameters
+    ----------
+    directory: PosixPath or str
+        directory path in which HDF5 data files are stored and from which load_spec_data loads
+        such files. The numbmer of HDF5 files must be 10*2**p where p is a positive integer
+    batch_size: int
+        batch size of data for model training (default 32)
+    slice_num: int
+        number of slices from one NMR spectrum sample (default 8)
+    numpy_array: bool
+        If True, the function returns dataset as numpy arrays (default False). Otherwise the
+        returned datasets are TF dataset
+
+    return
+    ------
+    datasets of train, valid, test: TF datasets or numpy arrays
+        TF datasets of train, valid, and test are returned unless numpy_array == True 
+    """
+    # get all hdf5 file paths and make sure that there are more than 10 hdf5 files
+    data_dir = Path(directory)
+    file_paths = data_dir.glob('*.hdf5')
+    hdf5_files = [str(file) for file in file_paths]    
+    
+    # file number restrictions
+    assert 9 < len(hdf5_files), "there are fewer than 10 hdf5 files"
+    p = np.log2(len(hdf5_files)/10)
+    assert p.is_integer(), "number of hdf5 files are not 10*2**p where p is a positive int"
+
+    # create train, valid, and test hdf5 file path lists separately
+    train_num = int(8*2**p)
+    valid_num = int(2**p)
+    train_data_files = hdf5_files[:train_num]
+    valid_data_files = hdf5_files[train_num:train_num+valid_num]
+    test_data_files = hdf5_files[-valid_num:]
+
+    # obtain number of data in each hdf5 file ans its data type and length
+    with h5py.File(hdf5_files[0], 'r') as f:
+        dtype = f['data'].dtype
+        num_samples = f['data'].shape[0]
+        data_length = f['data'].shape[1]
+
+    # set buffer size based on the number of data in each hdf5 file
+    buffer_size = int(num_samples/32)
+
+    # preallocate numpy arrays for data
+    train_sample_num = num_samples*train_num
+    X_train = np.zeros((train_sample_num, data_length), dtype=dtype)
+    y_train = np.zeros((train_sample_num, data_length), dtype=dtype)
+
+    valid_sample_num = num_samples*valid_num
+    X_valid = np.zeros((valid_sample_num, data_length), dtype=dtype)
+    y_valid = np.zeros((valid_sample_num, data_length), dtype=dtype)
+
+    X_test = np.zeros((valid_sample_num, data_length), dtype=dtype)
+    y_test = np.zeros((valid_sample_num, data_length), dtype=dtype)
+
+    # load the data into numpy arrays
+    for index, file_path in enumerate(train_data_files):
+        start = num_samples*index
+        with h5py.File(file_path, 'r') as f:
+            X_train[start:start+num_samples] = f['data'][:]
+            y_train[start:start+num_samples] = f['target'][:]
+
+    for index, file_path in enumerate(valid_data_files):
+        start = num_samples*index
+        with h5py.File(file_path, 'r') as f:
+            X_valid[start:start+num_samples] = f['data'][:]
+            y_valid[start:start+num_samples] = f['target'][:]
+
+    for index, file_path in enumerate(test_data_files):
+        start = num_samples*index
+        with h5py.File(file_path, 'r') as f:
+            X_test[start:start+num_samples] = f['data'][:]
+            y_test[start:start+num_samples] = f['target'][:]
+               
+    # smaller data length samples
+    smaller_length = int(data_length/slice_num)
+    X_train = X_train.reshape((train_sample_num, slice_num, smaller_length))
+    X_train = X_train.reshape((train_sample_num*slice_num, smaller_length))
+    y_train = y_train.reshape((train_sample_num, slice_num, smaller_length))
+    y_train = y_train.reshape((train_sample_num*slice_num, smaller_length))
+
+    X_valid = X_valid.reshape((valid_sample_num, slice_num, smaller_length))
+    X_valid = X_valid.reshape((valid_sample_num*slice_num, smaller_length))
+    y_valid = y_valid.reshape((valid_sample_num, slice_num, smaller_length))
+    y_valid = y_valid.reshape((valid_sample_num*slice_num, smaller_length))
+
+    X_test = X_test.reshape((valid_sample_num, slice_num, smaller_length))
+    X_test = X_test.reshape((valid_sample_num*slice_num, smaller_length))
+    y_test = y_test.reshape((valid_sample_num, slice_num, smaller_length))
+    y_test = y_test.reshape((valid_sample_num*slice_num, smaller_length))
+
+    # sometimes numpy array dataset is needed
+    if numpy_array == True:
+        return X_train, y_train, X_valid, y_valid, X_test, y_test 
+
+    # create TF dataset shuffled, batched and prefetched
+    dataset_train = tf.data.Dataset.from_tensor_slices((X_train, y_train))
+    dataset_train = dataset_train.shuffle(buffer_size=buffer_size, seed=42)
+    dataset_train = dataset_train.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+
+    dataset_valid = tf.data.Dataset.from_tensor_slices((X_valid, y_valid))
+    dataset_valid = dataset_valid.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+
+    dataset_test = tf.data.Dataset.from_tensor_slices((X_test, y_test))
+    dataset_test = dataset_test.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+
+    return dataset_train, dataset_valid, dataset_test
+
+def sliced_spec_data2(
+        directory, 
+        batch_size=32,
+        slice_num=8,
+        numpy_array=False):
+    """
+    same as sliced_spec_data, but fewer than 10 hdf5 files can be accepted and there is no segregation into train, valid, and test datasets
+
+    parameters
+    ----------
+    directory: PosixPath or str
+        directory path in which HDF5 data files are stored and from which load_spec_data loads
+        such files. The numbmer of HDF5 files must be 10*2**p where p is a positive integer
+    batch_size: int
+        batch size of data for model training (default 32)
+    slice_num: int
+        number of slices from one NMR spectrum sample (default 8)
+    numpy_array: bool
+        If True, the function returns dataset as numpy arrays (default False). Otherwise the
+        returned datasets are TF dataset
+
+    return
+    ------
+    datasets of train, valid, test: TF datasets or numpy arrays
+        TF datasets of train, valid, and test are returned unless numpy_array == True 
+    """
+    # get all hdf5 file paths and make sure that there are more than 10 hdf5 files
+    data_dir = Path(directory)
+    file_paths = data_dir.glob('*.hdf5')
+    hdf5_files = [str(file) for file in file_paths]    
+    num_files = len(hdf5_files)
+    
+    # obtain number of data in each hdf5 file ans its data type and length
+    with h5py.File(hdf5_files[0], 'r') as f:
+        dtype = f['data'].dtype
+        num_samples = f['data'].shape[0]
+        data_length = f['data'].shape[1]
+
+    # preallocate numpy arrays for data
+    train_sample_num = num_samples*num_files
+    X = np.zeros((train_sample_num, data_length), dtype=dtype)
+    y = np.zeros((train_sample_num, data_length), dtype=dtype)
+
+    # load the data into numpy arrays
+    for index, file_path in enumerate(hdf5_files):
+        start = num_samples*index
+        with h5py.File(file_path, 'r') as f:
+            X[start:start+num_samples] = f['data'][:]
+            y[start:start+num_samples] = f['target'][:]
+               
+    # reshape the data to increase number of samples with smaller data length
+    smaller_length = int(data_length/slice_num)
+    X = X.reshape((train_sample_num, slice_num, smaller_length))
+    X = X.reshape((train_sample_num*slice_num, smaller_length))
+    y = y.reshape((train_sample_num, slice_num, smaller_length))
+    y = y.reshape((train_sample_num*slice_num, smaller_length))
+
+    # sometimes numpy array dataset is needed
+    if numpy_array == True:
+        return X, y
+
+    # create TF dataset shuffled, batched and prefetched
+    dataset = tf.data.Dataset.from_tensor_slices((X, y))
+    dataset = dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+
+    return dataset
+
