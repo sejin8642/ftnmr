@@ -1117,3 +1117,18 @@ def sliced_spec_data2(
 
     return dataset
 
+def save_history(history, filename):
+    """
+    Save a history dict as hdf5 file
+    
+    Parameters
+    ----------
+    history: dict[str:list]
+        dictionary of history content ['loss', 'mse', 'val_loss', 'val_mse']. Each item is a list of floats 
+    filename: str
+        hdf5 file path string
+    """
+    with h5py.File(filename, "w") as f:
+        for key, value in history.history.items():
+            f.create_dataset(key, data=np.array(value))
+
