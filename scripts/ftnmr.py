@@ -373,6 +373,7 @@ class spectrometer():
             f_min=0.2,
             RH=12,
             std=0.00005,
+            ps_max=0.250,
             dtype='float32',
             baseline=False,
             phase_shift=False):
@@ -391,6 +392,7 @@ class spectrometer():
                 f_min=f_min,
                 RH=RH,
                 std=std,
+                ps_max=0.250,
                 dtype=dtype,
                 baseline=baseline,
                 phase_shift=phase_shift)
@@ -444,17 +446,20 @@ class spectrometer():
         # add phase shift to the raw signal
         if phase_shift:
             random_number = np.random.uniform(0, 1)
+            ps_max = self.ps_max*np.pi
+
             if random_number < 0.25:
                 # slope for first order phase shift
-                self.ps[0] = np.random.uniform(0, self.ps_max*np.pi/self.w_max)             
+                self.ps[0] = np.random.uniform(-ps_max/self.w_max, ps_max/self.w_max)
                 # y-intercept for zero order phase shift
                 self.ps[1] = 0
             elif 0.75 < random_number:
                 self.ps[0] = 0
-                self.ps[1] = np.random.uniform(0, self.ps_max*np.pi) 
+                self.ps[1] = np.random.uniform(-ps_max, ps_max) 
             else:
-                self.ps[0] = np.random.uniform(0, self.ps_max*np.pi/self.w_max) 
-                self.ps[1] = np.random.uniform(0, self.ps_max*np.pi) 
+                b = np.random.uniform(-ps_max, ps_max)
+                self.ps[1] = b 
+                self.ps[0] = (1/self.w_max)*np.random.uniform(-ps_max-b, ps_max-b)
 
         # noiseless target signal if true
         if smoothness == True:
@@ -524,7 +529,7 @@ class spectrometer():
 
 
         # extra target to compare performance
-        if extra_target and not second_noise:
+        if extra_target and not second_std:
             real_noise = np.random.normal(0, self.std, self.ns)
             imag_noise = np.random.normal(0, self.std, self.ns)
             noise2 = real_noise + 1j*imag_noise 
@@ -546,6 +551,9 @@ class spectrometer():
         self.target_FFT = np.fft.fft(self.target_signal, n=pow(2, self.p))[:self.nf]
         self.spectra = self.FFT.real.astype(self.dtype) + self.spectra_artifact.astype(self.dtype)
         self.target = self.target_FFT.real.astype(self.dtype)
+
+    def coinflip():
+        return np.random.choice([True, False])
 
     def __repr__(self):
         return "Spectrometer class that measures a sample solution with organic molecules in it"
