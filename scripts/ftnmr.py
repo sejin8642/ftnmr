@@ -171,6 +171,8 @@ class spectrometer():
         Signal noise
     ps: numpy array[float]
         Zero and first order phase parameters for phast shift (default 0 for both)
+    ps_max: float
+        Maximum scaler for phase shift randomizer (default 0.125)
     smooth: int
         0 if target signal is noiseless, and 1 if target signal also has the noise
         The noise is the same as raw signal noise
@@ -237,6 +239,7 @@ class spectrometer():
             RH=12,
             r=0.005,
             std=0.00005,
+            ps_max=0.125,
             dtype='float32'):
         """ spectrometer constructor
 
@@ -272,6 +275,8 @@ class spectrometer():
             Relaxivity for reference hydrogen (default 0.005 kHz)
         std: float
             Standard deviation of signal noise (default 0.0001)
+        ps_max: float
+            Maximum scaler for phase shift randomizer (default 0.125)
         dtype: str
             Data type for shift and spectra
         """
@@ -296,6 +301,7 @@ class spectrometer():
         self.hr = 1/RH
         self.r = r
         self.std = std
+        self.ps_max = ps_max
         self.dtype = dtype
         self.noise = np.zeros(self.ns, dtype=np.complex128)
         self.ps = np.zeros(2)
@@ -440,15 +446,15 @@ class spectrometer():
             random_number = np.random.uniform(0, 1)
             if random_number < 0.25:
                 # slope for first order phase shift
-                self.ps[0] = np.random.uniform(0, 0.125*np.pi/self.w_max)             
+                self.ps[0] = np.random.uniform(0, self.ps_max*np.pi/self.w_max)             
                 # y-intercept for zero order phase shift
                 self.ps[1] = 0
             elif 0.75 < random_number:
                 self.ps[0] = 0
-                self.ps[1] = np.random.uniform(0, 0.125*np.pi) 
+                self.ps[1] = np.random.uniform(0, self.ps_max*np.pi) 
             else:
-                self.ps[0] = np.random.uniform(0, 0.125*np.pi/self.w_max) 
-                self.ps[1] = np.random.uniform(0, 0.125*np.pi) 
+                self.ps[0] = np.random.uniform(0, self.ps_max*np.pi/self.w_max) 
+                self.ps[1] = np.random.uniform(0, self.ps_max*np.pi) 
 
         # noiseless target signal if true
         if smoothness == True:
@@ -457,7 +463,7 @@ class spectrometer():
             self.smooth = 1
 
     # spectrometer measure method
-    def measure(self, moles, noise=True, extra_target=False):
+    def measure(self, moles, noise=True, extra_target=False, second_std=None):
         """" 
         Measures FID signal from the sample
         
@@ -471,6 +477,9 @@ class spectrometer():
             If true, two target spectra will be returned instead of one (default False). The extra
             target has different noise than the first one, and it is used to compare performance
             between corrected spectrum and the different target spectrum
+        second_std: None or float
+            If None, noise for second target is the same as the first noise. If float, the second 
+            noise will have std of the float
         """
         self.measurement = True # to indicate that at least one measurement is done
         self.extra_target=extra_target # to includate extra target with different noise
@@ -515,14 +524,21 @@ class spectrometer():
 
 
         # extra target to compare performance
-        if extra_target:
+        if extra_target and not second_noise:
             real_noise = np.random.normal(0, self.std, self.ns)
             imag_noise = np.random.normal(0, self.std, self.ns)
             noise2 = real_noise + 1j*imag_noise 
             target_signal2 = self.dt*self.r*np.sum(target_fid, axis=0) + noise2
             target_FFT2 = np.fft.fft(target_signal2, n=pow(2, self.p))[:self.nf]
             self.target2 = target_FFT2.real.astype(self.dtype)
-        else:
+        elif second_std:
+            real_noise = np.random.normal(0, second_std, self.ns)
+            imag_noise = np.random.normal(0, second_std, self.ns)
+            noise2 = real_noise + 1j*imag_noise 
+            target_signal2 = self.dt*self.r*np.sum(target_fid, axis=0) + noise2
+            target_FFT2 = np.fft.fft(target_signal2, n=pow(2, self.p))[:self.nf]
+            self.target2 = target_FFT2.real.astype(self.dtype)
+        else: 
             self.target2 = None
 
         # DFT calculations
