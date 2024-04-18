@@ -849,6 +849,63 @@ def load_spec_data(
 
     return dataset_train, dataset_valid, dataset_test
 
+def load_spec_data_small(
+        directory, 
+        batch_size=32,
+        numpy_array=False):
+    """
+    this function loads data from hdf5 files in a directory and returns datasets as either numpy arrays or TF datasets. There could be fewer than 10 hdf5 files in the directory.
+
+    parameters
+    ----------
+    directory: PosixPath or str
+        directory path in which HDF5 data files are stored and from which load_spec_data loads
+        such files. The numbmer of HDF5 files must be 10*2**p where p is a positive integer
+    batch_size: int
+        batch size of data for model training
+    numpy_array: bool
+        If True, the function returns dataset as numpy arrays (default False). Otherwise the
+        returned datasets are TF dataset
+
+    return
+    ------
+    datasets of train, valid, test: TF datasets or numpy arrays
+        TF datasets of train, valid, and test are returned unless numpy_array == True 
+    """
+    # get all hdf5 file paths and make sure that there are more than 10 hdf5 files
+    data_dir = Path(directory)
+    file_paths = data_dir.glob('*.hdf5')
+    hdf5_files = [str(file) for file in file_paths]    
+    num_files = len(hdf5_files)
+
+    # obtain number of data in each hdf5 file ans its data type and length
+    with h5py.File(hdf5_files[0], 'r') as f:
+        dtype = f['data'].dtype
+        num_samples = f['data'].shape[0]
+        data_length = f['data'].shape[1]
+
+    # set buffer size based on the number of data in each hdf5 file and preallocate X, y
+    buffer_size = int(num_samples/32)
+    X = np.zeros((num_samples*num_files, data_length), dtype=dtype)
+    y = np.zeros((num_samples*num_files, data_length), dtype=dtype)
+
+    # load the data into numpy arrays
+    for index, file_path in enumerate(hdf5_files):
+        start = num_samples*index
+        with h5py.File(file_path, 'r') as f:
+            X[start:start+num_samples] = f['data'][:]
+            y[start:start+num_samples] = f['target'][:]
+
+    # sometimes numpy array dataset is needed
+    if numpy_array == True:
+        return X, y 
+
+    # create TF dataset batched and prefetched
+    dataset = tf.data.Dataset.from_tensor_slices((X, y))
+    dataset = dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+
+    return dataset
+
 def load_shift(hdf5_path):
     """
     returns chemical shift range from hdf5 path
