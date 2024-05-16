@@ -468,7 +468,12 @@ class spectrometer():
             self.smooth = 1
 
     # spectrometer measure method
-    def measure(self, moles, noise=True, extra_target=False, second_std=None):
+    def measure(self, 
+            moles, 
+            noise=True, 
+            extra_target=False, 
+            second_std=None, 
+            imaginary=False):
         """" 
         Measures FID signal from the sample
         
@@ -485,6 +490,9 @@ class spectrometer():
         second_std: None or float
             If None, noise for second target is the same as the first noise. If float, the second 
             noise will have std of the float
+        imaginary: bool
+            If true, if you have only phase shift artifacts, your output spectra will have imaginary
+            part as well
         """
         self.measurement = True # to indicate that at least one measurement is done
         self.extra_target=extra_target # to includate extra target with different noise
@@ -549,8 +557,13 @@ class spectrometer():
         # DFT calculations
         self.FFT = np.fft.fft(self.signal, n=pow(2, self.p))[:self.nf]
         self.target_FFT = np.fft.fft(self.target_signal, n=pow(2, self.p))[:self.nf]
-        self.spectra = self.FFT.real.astype(self.dtype) + self.spectra_artifact.astype(self.dtype)
         self.target = self.target_FFT.real.astype(self.dtype)
+
+        # output spectrum might contain imaginary part or not
+        if baseline == True or imaginary == False:
+            self.spectra = self.FFT.real.astype(self.dtype) + self.spectra_artifact.astype(self.dtype)
+        else:
+            self.spectra = self.FFT
 
     def coinflip():
         return np.random.choice([True, False])
