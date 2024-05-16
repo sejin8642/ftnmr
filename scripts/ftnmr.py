@@ -295,7 +295,7 @@ class spectrometer():
         self.ns, self.p, self.t = self.time(t_cut, f_min)
         self.df = self.f_s*pow(2, -self.p)
         self.nf = pow(2, self.p-self.p_l)
-        self.w_max = 2*np.pi*self.nf*self.nf
+        self.w_max = 2*np.pi*self.nf*self.df
         self.f = self.df*np.arange(0, self.nf)
         self.shift = ((self.shift_cutoff/self.nf)*np.arange(0, self.nf)).astype(dtype)
         self.hr = 1/RH
