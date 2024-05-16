@@ -450,12 +450,12 @@ class spectrometer():
 
             if random_number < 0.25:
                 # slope for first order phase shift
-                self.ps[0] = np.random.uniform(-ps_max/self.w_max, ps_max/self.w_max)
+                self.ps[0] = np.random.uniform(-2*ps_max/self.w_max, 2*ps_max/self.w_max)
                 # y-intercept for zero order phase shift
                 self.ps[1] = 0
-            elif 0.75 < random_number:
+            elif 0.50 < random_number:
                 self.ps[0] = 0
-                self.ps[1] = np.random.uniform(-ps_max, ps_max) 
+                self.ps[1] = np.random.uniform(-2*ps_max, 2*ps_max) 
             else:
                 b = np.random.uniform(-ps_max, ps_max)
                 self.ps[1] = b 
