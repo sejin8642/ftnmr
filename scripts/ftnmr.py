@@ -560,7 +560,7 @@ class spectrometer():
         self.target = self.target_FFT.real.astype(self.dtype)
 
         # output spectrum might contain imaginary part or not
-        if baseline == True or imaginary == False:
+        if imaginary == False:
             self.spectra = self.FFT.real.astype(self.dtype) + self.spectra_artifact.astype(self.dtype)
         else:
             self.spectra = self.FFT
