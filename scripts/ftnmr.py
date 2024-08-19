@@ -17,6 +17,8 @@ from scipy.stats import truncnorm
 from scipy import interpolate
 
 import tensorflow as tf
+import nmrglue as ng
+
 
 # Larmor angular frequency function
 def larmor(B=1.5, unit='MHz'):
@@ -1225,4 +1227,58 @@ def save_history(history, filename):
     with h5py.File(filename, "w") as f:
         for key, value in history.history.items():
             f.create_dataset(key, data=np.array(value))
+
+def bruker_data(fid_path, data_length=32768, max_height=5.0, std=0.02):
+    """
+    bruker_data loads bruker NMR data from BMRB database. The output data will be rescaled according
+    to max_height to fit into DNN model. Noise will be returned as well. Note that real and 
+    and imaginary part might be swapped and inverted. For nmrglue processing, use nmrglue.bruker.read
+    directly instead.
+    
+    parameters
+    ----------
+    fid_path: str
+        directory of NMR sample data path. Inside of it is pdata directory
+    max_height: float
+        approximate maximum height threshold of time-domain data
+        
+    returns
+    -------
+    data_model: numpy array
+        Time-domain NMR data with shape (32768, )
+    """
+    # read in the bruker formatted data
+    dic, data_original = ng.bruker.read(fid_path)
+
+    # remove the digital filter
+    data = ng.bruker.remove_digital_filter(dic, data_original)
+
+    # process the spectrum
+    data = ng.proc_base.zf_size(data, data_length)  # zero fill to 32768 points
+    data = ng.proc_base.fft(data)                   # Fourier transform
+
+    # get maxima and minima of data
+    maxr = np.max(data.real)
+    minr = np.abs(np.min(data.real))
+    maxi = np.max(data.imag)
+    mini = np.abs(np.min(data.imag))
+    MAXES = np.array([maxr, minr, maxi, mini])
+    max_index = np.argmax(MAXES)
+
+    if max_index == 0:
+        data_model = data.real
+    if max_index == 1:
+        data_model = data.imag
+    if max_index == 2:
+        data_model = -data.real
+    if max_index == 3:
+        data_model = -data.imag
+
+    # rescale the data
+    scale_data = max_height/np.max(data_model)
+    data_model = scale_data*data_model
+    
+    # get noise
+    noise = np.random.normal(0, std, size=data_length)
+    return data_model, noise
 
