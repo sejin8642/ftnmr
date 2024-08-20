@@ -1277,10 +1277,11 @@ def bruker_data(fid_path, data_length=32768, max_height=5.0, std=0.02):
     # rescale the data
     scale_data = max_height/np.max(data_model)
     data_model = scale_data*data_model
+    data_ng = scale_data*data
     
     # get noise
     noise = np.random.normal(0, std, size=data_length)
 
     # return data and noise for model, and raw FFT processed data
-    return data_model, noise, data
+    return data_model, noise, data_ng
 
