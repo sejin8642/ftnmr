@@ -1322,7 +1322,7 @@ def common_peaks(model_path, accuracy_path, sample_paths, sample_no):
 
     # find all indices of sample accuracy for common peaks
     indices_with_peaks = []
-    for ind, sample in enumerate(loaded_sample_accuracy):
+    for ind, sample in enumerate(sample_accuracy):
         if sample != 0:
             indices_with_peaks.append(ind)
 
