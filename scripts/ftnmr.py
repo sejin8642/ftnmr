@@ -17,6 +17,7 @@ from scipy.stats import truncnorm
 from scipy import interpolate
 
 import tensorflow as tf
+from tensorflow import keras
 import nmrglue as ng
 
 
