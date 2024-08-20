@@ -1364,4 +1364,4 @@ def common_peaks(model_path, accuracy_path, sample_paths, sample_no):
                     peaks_ng.append(peak_ng[i])
                     peaks_model.append(peak_model[j])
 
-    return peaks_model, peaks_ng
+    return peaks_model, peaks_ng, model_numpy, ng_output
