@@ -1285,3 +1285,81 @@ def bruker_data(fid_path, data_length=32768, max_height=5.0, std=0.02):
     # return data and noise for model, and raw FFT processed data
     return data_model, noise, data_ng
 
+def common_peaks(model_path, accuracy_path, sample_paths, sample_no):
+    """
+    common_peaks fn will return common peaks of model and ng for given sample number. Note that
+    sample_no = sample_index + 1
+
+    parameters
+    ----------
+    model_path: PosixPath or str
+        model file (hdf5) path to load the model
+    accuracy_path: str
+        accuracy file path. Accuray list contains WAS_ATA_accu contains WAS_values, ATA_values, and
+        accuracies for all the peaks of both model and ng processed data for all the samples
+    sample_paths: list[str]
+        list of NMR sample data (BMSE) path strings.
+    sample_no: int
+        sample number of NMR data with common peaks. sample_no = sample_index + 1
+
+    returns
+    -------
+    peaks_model: list[tuple(float, int, float, float)]
+        list of tuples for all the identified peaks. The tuple contains the following information:
+            locations : Peak locations
+            cluster_ids : Cluster numbers for peaks
+            scales : Estimated peak scales (linewidths)
+            amps : Estimated peak amplitudes
+    peaks_ng: list[tuple(float, int, float, float)]
+        same as peaks_model, but for nmrglue processed data
+    """
+    # load the model and accuracy
+    model = keras.models.load_model(model_path, compile=False)
+    with open(accuracy_path, "rb") as f:
+        sample_accuracy = pickle.load(f)
+
+    # find all indices of sample accuracy for common peaks
+    indices_with_peaks = []
+    for ind, sample in enumerate(loaded_sample_accuracy):
+        if sample != 0:
+            indices_with_peaks.append(ind)
+
+    # load the data
+    ind = sample_no - 1
+    std = 0.02
+    data_model, noise_real, data_ng = ftnmr.bruker_data(sample_paths[indices_with_peaks[ind]], std=std)
+
+    # noises
+    size = noise_real.shape[0]
+    noise_imag = np.random.normal(0.0, std, size=size)
+    noise = noise_real + 1j*noise_imag
+
+    # obtain model and ng output
+    model_input = np.array([data_model + noise_real])
+    model_output = model(model_input)
+    model_numpy = model_output.numpy()[0] - noise_real
+
+    ng_output = ng.proc_autophase.autops(data_ng + noise, fn='acme', p0=0.1, p1=0.1) # +noise
+    ng_output = ng.proc_bl.baseline_corrector(ng_output) - noise
+
+    # peak, width, amplitude, location threshold for ng_output and model output
+    pthres = 0.2
+    wthres = 15.0
+    Athres = 25.0
+    loc_thres = 5
+
+    # pick peaks
+    peak_model = ng.analysis.peakpick.pick(model_numpy, pthres=pthres)
+    peak_ng = ng.analysis.peakpick.pick(ng_output.real, pthres=pthres)
+
+    # Find matching elements within the threshold
+    peaks_ng = []
+    peaks_model = []
+    for i in range(len(peak_ng)):
+        for j in range(len(peak_model)):
+            if abs(peak_ng[i][0] - peak_model[j][0]) <= loc_thres:
+                if Athres < peak_ng[i][3] and wthres < peak_ng[i][2]:
+                    peaks_ng.append(peak_ng[i])
+                    peaks_model.append(peak_model[j])
+
+    return peaks_model, peaks_ng
