@@ -1280,5 +1280,7 @@ def bruker_data(fid_path, data_length=32768, max_height=5.0, std=0.02):
     
     # get noise
     noise = np.random.normal(0, std, size=data_length)
-    return data_model, noise
+
+    # return data and noise for model, and raw FFT processed data
+    return data_model, noise, data
 
