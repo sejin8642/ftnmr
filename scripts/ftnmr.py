@@ -1329,7 +1329,7 @@ def common_peaks(model_path, accuracy_path, sample_paths, sample_no):
     # load the data
     ind = sample_no - 1
     std = 0.02
-    data_model, noise_real, data_ng = ftnmr.bruker_data(sample_paths[indices_with_peaks[ind]], std=std)
+    data_model, noise_real, data_ng = bruker_data(sample_paths[indices_with_peaks[ind]], std=std)
 
     # noises
     size = noise_real.shape[0]
