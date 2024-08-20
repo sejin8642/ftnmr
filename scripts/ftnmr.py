@@ -8,6 +8,7 @@ from itertools import product
 import fid
 from pathlib import Path
 import h5py
+import pickle
 
 import numpy as np
 import matplotlib.pyplot as plt
