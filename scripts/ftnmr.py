@@ -1287,9 +1287,9 @@ def bruker_data(fid_path, data_length=32768, max_height=5.0, std=0.02):
     # return data and noise for model, and raw FFT processed data
     return data_model, noise, data_ng
 
-def common_peaks(model_path, accuracy_path, sample_paths, sample_no):
+def common_peaks_with_accuracy(model_path, accuracy_path, sample_paths, sample_no):
     """
-    common_peaks fn will return common peaks of model and ng for given sample number. Note that
+    this fn will return common peaks of model and ng for given sample number. Note that
     sample_no = sample_index + 1
 
     parameters
@@ -1365,3 +1365,180 @@ def common_peaks(model_path, accuracy_path, sample_paths, sample_no):
                     peaks_model.append(peak_model[j])
 
     return peaks_model, peaks_ng, model_numpy, ng_output
+
+def common_peaks(model_path, sample_path):
+    """
+    common_peaks will return common peaks of model and ng for given index number for sample files
+    as well as model and ng processed spectra
+
+    parameters
+    ----------
+    model_path: PosixPath or str
+        model file (hdf5) path to load the model
+    sample_paths: list[str]
+        list of NMR sample data (BMSE) path strings.
+    index: int
+        index of NMR data from sample_paths
+
+    returns
+    -------
+    peaks_model: list[ndarray]
+        list of numpy arrays for all the identified peaks. The array contains the following information:
+            locations : Peak locations
+            scales : Estimated peak scales (linewidths)
+            amps : Estimated peak amplitudes
+            syms : Estimated peak symmetricity
+    peaks_ng: list[tuple(float, int, float, float)]
+        same as peaks_model, but for nmrglue processed data
+    model_numpy: ndarray
+        DNN model processed spectra
+    ng_output: ndarray
+        nmrglue processsed spectra
+    """
+    # load the model and data
+    model = keras.models.load_model(model_path, compile=False)
+    data_model, noise_real, data_ng = bruker_data(sample_path)
+
+    # noises
+    size = noise_real.shape[0]
+    std = np.std(noise_real)
+    noise_imag = np.random.normal(0.0, std, size=size)
+    noise = noise_real + 1j*noise_imag
+
+    # obtain model and ng output
+    model_input = np.array([data_model + noise_real])
+    model_output = model(model_input)
+    model_numpy = model_output.numpy()[0] - noise_real
+
+    ng_output = ng.proc_autophase.autops(data_ng + noise, fn='acme', p0=0.1, p1=0.1) # +noise
+    ng_output = ng.proc_bl.baseline_corrector(ng_output) - noise
+
+    # peak, width, amplitude, location threshold for ng_output and model output
+    pthres = 0.2
+    wthres = 15.0
+    Athres = 25.0
+    loc_thres = 5
+
+    # pick peaks
+    peak_model = ng.analysis.peakpick.pick(model_numpy, pthres=pthres)
+    peak_ng = ng.analysis.peakpick.pick(ng_output.real, pthres=pthres)
+
+    # Find matching elements within the threshold
+    peaks_ng = []
+    peaks_model = []
+    for i in range(len(peak_ng)):
+        for j in range(len(peak_model)):
+            if abs(peak_ng[i][0] - peak_model[j][0]) <= loc_thres:
+                if Athres < peak_ng[i][3] and wthres < peak_ng[i][2]:
+                    peaks_ng.append(peak_ng[i])
+                    peaks_model.append(peak_model[j])
+
+    # If no common peaks were found, do not proceed to calculate symmetricity
+    peak_num = len(peaks_model)
+    if peak_num == 0 :
+        print(f"-----no common peaks found-----")
+        return peaks_model, peaks_ng, model_numpy, ng_output
+
+    # get symmetricities for both ng and model peaks
+    for n in range(peak_num):
+        # get loc, w, A of peaks (model and ng)
+        loc1, _, w1, A1 = peaks_model[n]
+        loc2, _, w2, A2 = peaks_ng[n]
+        scale = 2
+
+        # get symmetricity for model
+        model_area = model_numpy[int(loc1-scale*w1):int(loc1+scale*w1+1)]
+        model_len = len(model_area)
+        difference_model = model_numpy[:(model_len//2)+1] - model_numpy[::-1][:model_len//2+1]
+        sym1 = np.sum(difference_model)/A1
+        peaks_model[n] = np.array([loc1, w1, A1, sym1])
+
+        # get symmetricity for ng
+        ng_area = ng_output.real[int(loc2-scale*w2):int(loc2+scale*w2+1)]
+        ng_len = len(ng_area)
+        difference_ng = ng_output.real[:(ng_len//2)+1] - ng_output.real[::-1][:ng_len//2+1]
+        sym2 = np.sum(difference_ng)/A2
+        peaks_ng[n] = np.array([loc2, w2, A2, sym2])
+
+    return peaks_model, peaks_ng, model_numpy, ng_output
+
+def spectrum_gen(abundance=50.0, T2=100.0, angle=0.0, cs=0.5, shift_minimum=0.6, std=0.0):
+    """
+    spectrum_gen generates single peak NMR spectrum based on input parameters (see below).
+    The default maximum chemical shift range for FFT is 128.0 ppm.
+
+    parameters
+    ----------
+    abundance: float
+        proton abundance (default 50.0, and unit is spectrometer specific)
+    T2: float
+        T2 value, relaxation constant in ms (default 100.0)
+    angle: float
+        phase angle of time-domain signal (default 0.0)
+    cs: float
+        chemical shift of the peak (default 0.5)
+    shift_minimum: float
+        minimum chemical shift to be included in the chemical shift range (default 0.6)
+    std: float
+        STD for spectrum noise (default 0.0)
+
+    returns
+    -------
+    spectrum: ndarray
+        numpy array of NMR spectrum with single peak. The default length is 4096.
+    """
+    spec = spectrometer(shift_maximum=128.0, shift_minimum=shift_minimum, std=std)
+    couplings = []
+
+    # prepare sample and measure the spectrum
+    hydrogens = {'a':(abundance, cs, T2)}
+    mole = molecule(hydrogens=hydrogens, couplings=couplings)
+    moles = {'A': (mole, 1)}
+    spec.ps[1] = float(2*np.pi*angle/180.0)
+    spec.measure(moles=moles)
+
+    return spec.spectra
+
+def estimate_WAS(ATA_values, pthres=0.2):
+    """
+    estimate_WAS estimates WAS_values, [width, amplitude, symmetricity], based on ATA_values,
+    [H abundance, T2, angle].
+
+    parameters
+    ATA_values: ndarray
+        numpy array of abundance, amplitude, symmetricity. The shape is (3,)
+    pthres: float
+        peak threshold for nmrglue peak picking process (default 0.2). Not to be touched.
+
+    return
+    ------
+    WAS_values: ndarray
+        numpy array of width, amplitude, symmetricity. The shape is (3,)
+    """
+    spec = spectrometer(shift_maximum=128.0, shift_minimum=0.6, std=0.0)
+    couplings = []
+
+    # prepare sample and measure the spectrum
+    hydrogens = {'a':(ATA_values[0], 0.5, ATA_values[1])}
+    mole = molecule(hydrogens=hydrogens, couplings=couplings)
+    moles = {'A': (mole, 1)}
+    spec.ps[1] = float(2*np.pi*ATA_values[2]/180.0)
+    spec.measure(moles=moles)
+
+    # get peak
+    h = 0.3*np.max(spec.spectra)
+    if h < pthres:
+        pthres = h
+    loc, _, w, A = ng.analysis.peakpick.pick(spec.spectra, pthres=pthres)[0]
+
+    # get peak area
+    scale = 2
+    peak_area = spec.spectra[int(loc-scale*w):int(loc+scale*w+1)]
+    area_len = len(peak_area)
+
+    # get difference sum divided by amplitude around the peak
+    difference = spec.spectra[:(area_len//2)+1] - spec.spectra[::-1][:area_len//2+1]
+    sym = np.sum(difference)/A
+
+    return np.array([w, A, sym], dtype='float32')
+
