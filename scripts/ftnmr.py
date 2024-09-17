@@ -16,6 +16,7 @@ import scipy
 from scipy.special import binom
 from scipy.stats import truncnorm
 from scipy import interpolate
+import hyperopt
 
 import tensorflow as tf
 from tensorflow import keras
@@ -1385,19 +1386,21 @@ def common_peaks(model_path, sample_path):
     peaks_model: list[ndarray]
         list of numpy arrays for all the identified peaks. The array contains the following information:
             locations : Peak locations
-            scales : Estimated peak scales (linewidths)
-            amps : Estimated peak amplitudes
-            syms : Estimated peak symmetricity
-    peaks_ng: list[tuple(float, int, float, float)]
+            scales    : Estimated peak scales (linewidths)
+            amps      : Estimated peak amplitudes
+            syms      : Estimated peak symmetricity
+    peaks_ng: list[ndarray]
         same as peaks_model, but for nmrglue processed data
     model_numpy: ndarray
         DNN model processed spectra
     ng_output: ndarray
         nmrglue processsed spectra
+    model_input: ndarray
+        uncorrected spectrum (real part) DNN model processed
     """
     # load the model and data
     model = keras.models.load_model(model_path, compile=False)
-    data_model, noise_real, data_ng = bruker_data(sample_path)
+    data_model, noise_real, data_ng = ftnmr.bruker_data(sample_path)
 
     # noises
     size = noise_real.shape[0]
@@ -1411,7 +1414,7 @@ def common_peaks(model_path, sample_path):
     model_numpy = model_output.numpy()[0] - noise_real
 
     ng_output = ng.proc_autophase.autops(data_ng + noise, fn='acme', p0=0.1, p1=0.1) # +noise
-    ng_output = ng.proc_bl.baseline_corrector(ng_output) - noise
+    ng_output = ng.proc_bl.baseline_corrector(ng_output.real) - noise_real
 
     # peak, width, amplitude, location threshold for ng_output and model output
     pthres = 0.2
@@ -1437,7 +1440,7 @@ def common_peaks(model_path, sample_path):
     peak_num = len(peaks_model)
     if peak_num == 0 :
         print(f"-----no common peaks found-----")
-        return peaks_model, peaks_ng, model_numpy, ng_output
+        return peaks_model, peaks_ng, model_numpy, ng_output, model_input
 
     # get symmetricities for both ng and model peaks
     for n in range(peak_num):
@@ -1454,13 +1457,13 @@ def common_peaks(model_path, sample_path):
         peaks_model[n] = np.array([loc1, w1, A1, sym1])
 
         # get symmetricity for ng
-        ng_area = ng_output.real[int(loc2-scale*w2):int(loc2+scale*w2+1)]
+        ng_area = ng_output[int(loc2-scale*w2):int(loc2+scale*w2+1)]
         ng_len = len(ng_area)
-        difference_ng = ng_output.real[:(ng_len//2)+1] - ng_output.real[::-1][:ng_len//2+1]
+        difference_ng = ng_output[:(ng_len//2)+1] - ng_output[::-1][:ng_len//2+1]
         sym2 = np.sum(difference_ng)/A2
         peaks_ng[n] = np.array([loc2, w2, A2, sym2])
 
-    return peaks_model, peaks_ng, model_numpy, ng_output
+    return peaks_model, peaks_ng, model_numpy, ng_output, model_input
 
 def spectrum_gen(abundance=50.0, T2=100.0, angle=0.0, cs=0.5, shift_minimum=0.6, std=0.0):
     """
@@ -1542,3 +1545,405 @@ def estimate_WAS(ATA_values, pthres=0.2):
 
     return np.array([w, A, sym], dtype='float32')
 
+def guess_ATA(database_path, WAS_values):
+    """
+    guess_ATA first guesses proton abundance, T2, and phase angle of spectrum from WAS_values
+    where WAS_values = [width, amplitude, symmetricity]. For this, width-amplitude-symmetricity
+    database is used where indices represent [abundance - base_num, T2 - base_num, 10*angle]
+    (the default base_num is 25). It calculates the shortest distance between the input
+    WAS_values and the database WAS_values, and use the indices of such database WAS_values to
+    rough estimate ATA values.
+
+    parameters
+    ----------
+    WAS_values: ndarray
+        numpy array that contains measured (by nmrglue) width, amplitude, symmetricity.
+    database_path: PosixPath or str
+        path for ATA_WAS database. database array has 4 dimensions: i, j, k and (w, A, s):
+            i - proton abundance from base abundance to the number of iterations
+            j - T2 values from base T2 to the number of iterations
+            k - angle values: angle = 0.1*k
+            (w, A, s) - width, amplitude, symmetricity measured by common_peaks method
+        current database.shape is (400, 300, 200, 3)
+    """
+    database = np.load(str(database_path))
+    WAS_copy = copy(WAS_values)
+
+    # parameters of the database
+    base_num = 25.0
+    abundance_num = 400
+    T2_num = 300
+    angle_num = 200
+    sym_sign = np.sign(WAS_copy[2])
+    WAS_copy[2] *= -sym_sign
+
+    # first rough estimate of ATA values
+    weights = 1.0/np.abs(WAS_copy)
+    disp = weights*np.abs(database - WAS_copy)
+    distance = np.linalg.norm(disp, axis=-1)
+    min_idx = np.unravel_index(np.argmin(distance), distance.shape)
+    ATA_guesses = np.array(min_idx) + np.array([base_num, base_num, 0])
+    ATA_guesses[2] *= -0.1*sym_sign
+
+    return ATA_guesses
+
+def estimate_ATA(WAS_values, database_path):
+    """
+    Estimate the ATA_values ([abundance, T2, angle]) of a sample using scipy optimizers.
+    WAS_values ([width, amplitude, symmetricity]) of the sample must match the WAS values
+    from estimate_WAS(ATA_values). This function uses a combination of least squares,
+    root finding, and minimization algorithms from scipy to optimize the ATA values.
+    The optimization process is guided by a Bayesian framework, which adaptively selects
+    the best algorithm and scaling factor to use at each iteration.
+
+    guess_ATA is first used to generate the initial ATA_guesses [abundance, T2, angle]
+    (WAS_values and database_path are input arguments for guess_ATA). With initial_ATA,
+    estimate_WAS is used to generate the first WAS_values. Two WAS_values arrays are then
+    to be compared by optimizer numerically until the newly generated WAS_values become very
+    close to the input WAS_values. This process repeats with different algorithms and scalars
+    selected by Bayesian optimizations until the best result is obtained.
+
+    parameters
+    ----------
+    WAS_values: ndarray
+        numpy array that contains measured (by nmrglue) width, amplitude, symmetricity.
+    database_path: PosixPath or str
+        path for ATA_WAS database. database array has 4 dimensions: i, j, k and (w, A, s):
+            i - proton abundance from base abundance to the number of iterations
+            j - T2 values from base T2 to the number of iterations
+            k - angle values: angle = 0.1*k
+            (w, A, s) - width, amplitude, symmetricity measured by common_peaks method
+        current database.shape is (400, 300, 200, 3)
+
+    returns
+    -------
+    optimizer output: OptimizeResult
+        The optimization result represented as a ``OptimizeResult`` object.
+        Important attributes are: ``x`` the solution array, ``success`` a
+        Boolean flag indicating if the optimizer exited successfully and
+        ``message`` which describes the cause of the termination. See
+        `OptimizeResult` for a description of other attributes.
+    """
+    # WAS inputs, symmetricity sign, and optimizer inputs
+    width, amplitude, sym = copy(WAS_values)
+    initial_ATA = guess_ATA(database_path, WAS_values)
+    abun, T2, angle = initial_ATA
+    print(f"WAS values : {width, amplitude, sym}")
+    print(f"ATA guess  : {initial_ATA}")
+    print()
+
+    #### least_squares dictionary for Bayesian opt ####
+    least_squares = scipy.optimize.least_squares
+    bounds0 = [(abun-4.0, T2-3.0, angle-1.0), (abun+4.0, T2+3.0, angle+1.0)]
+    parameters = inspect.signature(least_squares).parameters
+    opt_inputs = {param.name:param.default for param in parameters.values()}
+
+    # cost function definition for least_squares optimizer
+    def cost_fn0(initial_ATA):
+        w, A, s = estimate_WAS(initial_ATA)
+        output = np.abs([(w - width)/width, (A - amplitude)/amplitude, (s - sym)/sym])
+        return output
+
+    # set parameters and the final list for least_squares
+    opt_inputs['fun']       = cost_fn0
+    opt_inputs['x0']        = initial_ATA
+    opt_inputs['bounds']    = bounds0
+    opt_inputs['jac']       = '3-point'
+    opt_inputs['xtol']      = 1e-15
+    opt_inputs['ftol']      = 1e-15
+    opt_inputs['gtol']      = 1e-15
+    opt_inputs['max_nfev']  = 1000
+    least_squares_dict      = [( least_squares, copy(opt_inputs) )]
+
+    #### root dictionary for Bayesian opt ####
+    root = scipy.optimize.root
+    parameters = inspect.signature(root).parameters
+    opt_inputs = {param.name:param.default for param in parameters.values()}
+
+    # cost function definition for root optimizer
+    def cost_fn1(initial_ATA):
+        w, A, s = estimate_WAS(initial_ATA)
+        output = np.array([(w - width)/width, (A - amplitude)/amplitude, (s - sym)/sym])
+        return output
+
+    # optimizer input parameters for root
+    opt_inputs['fun']    = cost_fn1
+    opt_inputs['x0']     = initial_ATA
+    opt_inputs['tol']    = 1e-15
+
+    # get that dict!!!
+    root_method_list = [
+        'hybr',
+        'lm',
+        'broyden1',
+        'broyden2',
+        'linearmixing',
+        'excitingmixing'] # removed anderson method
+
+    root_dict = []
+    for method in root_method_list:
+        temp_inputs = copy(opt_inputs)
+        temp_inputs['method'] = method
+        root_dict.append(( root, temp_inputs ))
+
+    #### minimize dictionary for Bayesian opt ####
+    minimize = scipy.optimize.minimize
+    bounds1 = [(abun-4.0, abun+4.0), (T2-3.0, T2+3.0), (angle-1.0, angle+1.0)]
+    parameters = inspect.signature(minimize).parameters
+    opt_inputs = {param.name:param.default for param in parameters.values()}
+
+    # cost function definition for minimize
+    norm = partial(np.linalg.norm, ord=1) # ord=2 might be better...
+    def cost_fn2(initial_ATA):
+        w, A, s = estimate_WAS(initial_ATA)
+        output = norm([(w - width)/width, (A - amplitude)/amplitude, (s - sym)/sym])
+        return output
+
+    # optimizer input parameters for minimize
+    opt_inputs['fun'] = cost_fn2
+    opt_inputs['x0']  = initial_ATA
+    opt_inputs['tol'] = 1e-15
+
+    # get that dict!!!
+    minimize_method_list = [
+        'Powell',
+        'CG',
+        'BFGS',
+        'L-BFGS-B',
+        'TNC',
+        'COBYLA',
+        'SLSQP',
+        'Nelder-Mead'] # removed trust-constr
+
+    no_bound_list = ['CG', 'BFGS']
+    no_jac_list = ['Nelder-Mead','Powell','COBYLA']
+    no_option_list = ['TNC']
+
+    minimize_dict = []
+    for method in minimize_method_list:
+        temp_inputs = copy(opt_inputs)
+        temp_inputs['method'] = method
+
+        if method not in no_bound_list:
+            temp_inputs['bounds'] = bounds1
+
+        if method not in no_jac_list:
+            temp_inputs['jac'] = '3-point'
+
+        if method not in no_option_list:
+            temp_inputs['options'] = {'maxiter': 1000, 'disp': False}
+
+        minimize_dict.append(( minimize, temp_inputs ))
+
+    # final method list for Bayesian optimization
+    method_list = least_squares_dict + root_dict + minimize_dict
+    ms_length = max([ len(s[1]['method'])  for s in method_list])
+
+    # Bayesian objective function with the search space
+    last_result = None # we want to store best result from optimizer
+    best_cost = 1e+10
+    space = {
+        'scalar': hyperopt.hp.loguniform('scalar', 0, 35),
+        'optimizer': hyperopt.hp.choice('optimizer', method_list)}
+
+    def objective_fn(params):
+        nonlocal last_result, best_cost # keep track of last result and best cost
+
+        # params from search space
+        scalar = params['scalar']
+        optimizer, opt_inputs = params['optimizer']
+        cost_fn = opt_inputs['fun']
+        method =  opt_inputs['method'].rjust(ms_length)
+        print(f"optimizer {method} with scalar {scalar}")
+
+        # new loss fn with scalar still searching
+        def cost_fn_scaled(initial_ATA):
+            return scalar*cost_fn(initial_ATA)
+
+        temp_inputs = copy(opt_inputs)
+        temp_inputs['fun'] = cost_fn_scaled
+
+        # with the rescaled loss fn get the result for Bayesian opt.
+        try:
+            last_result = optimizer(**temp_inputs)
+        except IndexError:
+            return np.random.uniform(0.1, 1.0) # punish this optimizer!!
+
+        # the output for Bayesian opt must be scalar
+        if isinstance(last_result.fun, np.ndarray):
+            cost = np.linalg.norm(last_result.fun, ord=1)/scalar
+        else:
+            cost = last_result.fun/scalar
+
+        # print out the new best method for sanity check
+        if cost < best_cost:
+            best_cost = cost
+            print(f"new best method/scalar :{method}/{scalar}")
+
+        return cost
+
+    # let it Bayesian optimize!
+    trials = hyperopt.Trials()
+    max_evals=450
+    opt_result = hyperopt.fmin(
+        objective_fn,
+        space,
+        algo=hyperopt.tpe.suggest,
+        max_evals=max_evals,
+        loss_threshold=1e-15,
+        trials=trials
+    )
+
+    # Bayesian optimization result
+    scalar = opt_result['scalar']
+    optimizer, opt_inputs = method_list[opt_result['optimizer']]
+    print()
+    print(f"Bayesian optimization done with:")
+    print(f"optimizer -> {opt_inputs['method']}")
+    print(f"scalar    -> {scalar}")
+    print()
+
+    # return the last result if optimization is done before max_evals
+    if trials.best_trial['tid']+1 != max_evals: return last_result
+
+    # in case Bayesian optimization evaluated until max_evals
+    cost_fn = opt_inputs['fun']
+    def cost_fn_scaled(initial_ATA):
+        return scalar*cost_fn(initial_ATA)
+
+    # optimize with scaled cost_fn
+    opt_inputs['fun'] = cost_fn_scaled
+    return optimizer(**opt_inputs)
+
+class NMR_result():
+    """
+    NMR_result object contains nmr data processed with common_peaks (which outputs peaks 
+    [location, width, amplitude, symmetricity]), corrected spectra, the original spectrum, 
+    and number of common peaks for both the model and nmrglue processed data. To instantiate,
+    you need to provide TF model path (hdf5 usually), sample path (directory with nmr data, 
+    usually contains pdata directory), and database path (ATA to WAS database). If there is 
+    at least one common peak, then ATA values are estimated for both the model and nmrglue
+    peaks, which are then used to measure accuracy of the artifact correction measured by 
+    the accuracy of peak amplitudes (original phase angle vs. zero phase angle).
+    
+    Attributes
+    ----------
+    peaks_model: list[ndarray]
+        list of numpy arrays for all the identified peaks which contain the following info:
+            locations : Peak locations
+            scales    : Estimated peak scales (linewidths)
+            amps      : Estimated peak amplitudes
+            syms      : Estimated peak symmetricity
+    peaks_ng: list[ndarray]
+        same as peaks_model, but for nmrglue processed data
+    spectrum_model: ndarray
+        DNN model processed spectra
+    spectrum_ng: ndarray
+        nmrglue processsed spectra
+    nmr_data: ndarray
+        uncorrected spectrum (real part) DNN model processed    
+    num_peaks: int
+        number of common peaks
+    ATA_model: list[ndarray]
+        abundance (proton), T2, angle (phase shift) of peaks in model corrected spectra
+    ATA_ng: list[ndarray]
+        same as ATA_model, but for nmrglue processed spectrum
+    accuracy_model: list[ndarray]
+        this list contains accuracy of width and amplitude of model corrected peaks. The first
+        element is for width, the second element is for peak amplitude. The unit is in percent
+        (that is, 1.5 means 1.5% accuracy). The accuracy is measured against peak with zero
+        phase shift angle. 
+    accuracy_ng: list[ndarray]
+        same as accuracy_model, but for nmrglue processed spectrum
+    """
+    def __init__(self, model_path, sample_path, database_path):
+        # common peaks method and its output
+        cp_outputs = common_peaks(model_path, sample_path)
+        self.peaks_model    = cp_outputs[0]
+        self.peaks_ng       = cp_outputs[1]
+        self.spectrum_model = cp_outputs[2]
+        self.spectrum_ng    = cp_outputs[3]
+        self.nmr_data       = cp_outputs[4]
+        self.num_peaks      = len(self.peaks_model)
+        
+        # no ATA values if no common peaks were found
+        if len(self.peaks_model) == 0: return
+        
+        # estimate the ATA values for each peak
+        self.ATA_model      = []
+        self.ATA_ng         = []
+        for LWAS_model, LWAS_ng in zip(self.peaks_model, self.peaks_ng):
+            print("optimizing for DNN model....")
+            self.ATA_model.append(estimate_ATA(LWAS_model[1:], database_path).x)
+            print()
+            
+            print("optimizint for nmrglue model....")
+            self.ATA_ng.append(estimate_ATA(LWAS_ng[1:], database_path).x)
+            print()
+            
+        # get accuracy of width and amplitude for both model and nmrglue
+        self.accuracy_model = []
+        self.accuracy_ng = []
+        for ind in range(self.num_peaks):
+            ATA, WAS = self.ATA_model[ind], self.peaks_model[ind][1:]
+            self.accuracy_model.append( self.accuracy(ATA, WAS) )
+            
+            ATA, WAS = self.ATA_ng[ind], self.peaks_ng[ind][1:]
+            self.accuracy_ng.append( self.accuracy(ATA, WAS) )
+
+    def accuracy(self, ATA_values, WAS_values):
+        """
+        returns accuracy of width and amplitude for the given ATA estimate
+        """
+        # get the target spectrum (zero phase shift angle)
+        a, T2, angle = ATA_values
+        spectrum_target = spectrum_gen(a, T2, 0.0)
+
+        # get the target peak
+        _,_,w,A = ng.analysis.peakpick.pick(spectrum_target, pthres=0.2)[0]
+
+        # get accuracies of width and amplitude
+        accuracy = np.array([
+            100*np.abs(w-WAS_values[0])/w,
+            100*np.abs(A-WAS_values[1])/A])
+        
+        return accuracy
+            
+    def WAS_list(self):
+        """
+        returns WAS values of model and nmrglue results
+        """
+        pzip = zip(self.peaks_model, self.peaks_ng)
+        return [(lwasm[1:], lwasn[1:]) for (lwasm, lwasn) in pzip]
+    
+    def ATA_list(self):
+        """
+        returns ATA values of model and nmrglue results
+        """
+        azip = zip(self.ATA_model, self.ATA_ng)
+        return [(atam, atan) for (atam, atan) in azip]
+
+    def accuracy_list(self):
+        """
+        returns accuracy of model and nmrglue results
+        """        
+        azip = zip(self.accuracy_model, self.accuracy_ng)
+        return [(acm, acn) for (acm, acn) in azip]
+    
+    def __repr__(self):
+        # in case there is no common peaks
+        if len(self.peaks_model) == 0: return "no common peaks were found; no result"
+    
+        lzip = zip(self.WAS_list(), self.ATA_list(), self.accuracy_list())
+        output = "NMR_result(\n"
+        output += "[the first element is for DNN model, the second element is for nmrglue]\n"
+
+        for ind, (w, a, ac) in enumerate(lzip):
+            output += f"  --- the {ind+1}-th peak ---\n"
+            output += f"  WAS_values : {w}\n"
+            output += f"  ATA_values : {a}\n"
+            output += f"  accuracy   : {ac}\n"
+            output += "\n"
+        output += ")\n"
+
+        return output
