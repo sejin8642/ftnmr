@@ -1400,7 +1400,7 @@ def common_peaks(model_path, sample_path):
     """
     # load the model and data
     model = keras.models.load_model(model_path, compile=False)
-    data_model, noise_real, data_ng = ftnmr.bruker_data(sample_path)
+    data_model, noise_real, data_ng = bruker_data(sample_path)
 
     # noises
     size = noise_real.shape[0]
