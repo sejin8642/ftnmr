@@ -5,9 +5,12 @@ proton gyromagnetic ratio: https://physics.nist.gov/cgi-bin/cuu/Value?gammap
 """
 
 from itertools import product
+from functools import partial
+from copy import copy
 import fid
 from pathlib import Path
 import h5py
+import inspect
 import pickle
 
 import numpy as np
