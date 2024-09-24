@@ -1346,7 +1346,7 @@ def common_peaks_with_accuracy(model_path, accuracy_path, sample_paths, sample_n
     model_numpy = model_output.numpy()[0] - noise_real
 
     ng_output = ng.proc_autophase.autops(data_ng + noise, fn='acme', p0=0.1, p1=0.1) # +noise
-    ng_output = ng.proc_bl.baseline_corrector(ng_output) - noise
+    ng_output = ng.proc_bl.baseline_corrector(ng_output.real) - noise
 
     # peak, width, amplitude, location threshold for ng_output and model output
     pthres = 0.2
@@ -1356,7 +1356,7 @@ def common_peaks_with_accuracy(model_path, accuracy_path, sample_paths, sample_n
 
     # pick peaks
     peak_model = ng.analysis.peakpick.pick(model_numpy, pthres=pthres)
-    peak_ng = ng.analysis.peakpick.pick(ng_output.real, pthres=pthres)
+    peak_ng = ng.analysis.peakpick.pick(ng_output, pthres=pthres)
 
     # Find matching elements within the threshold
     peaks_ng = []
@@ -1427,7 +1427,7 @@ def common_peaks(model_path, sample_path):
 
     # pick peaks
     peak_model = ng.analysis.peakpick.pick(model_numpy, pthres=pthres)
-    peak_ng = ng.analysis.peakpick.pick(ng_output.real, pthres=pthres)
+    peak_ng = ng.analysis.peakpick.pick(ng_output, pthres=pthres)
 
     # Find matching elements within the threshold
     peaks_ng = []
@@ -1787,7 +1787,7 @@ def estimate_ATA(WAS_values, database_path):
 
     # let it Bayesian optimize!
     trials = hyperopt.Trials()
-    max_evals=450
+    max_evals=250
     opt_result = hyperopt.fmin(
         objective_fn,
         space,
@@ -1807,7 +1807,8 @@ def estimate_ATA(WAS_values, database_path):
     print()
 
     # return the last result if optimization is done before max_evals
-    if trials.best_trial['tid']+1 != max_evals: return last_result
+    if len(trials) != max_evals or trials.best_trial['tid'] == max_evals-1: 
+        return last_result
 
     # in case Bayesian optimization evaluated until max_evals
     cost_fn = opt_inputs['fun']
