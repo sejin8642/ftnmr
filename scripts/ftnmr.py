@@ -1535,8 +1535,7 @@ def common_peaks(model_path, sample_path):
         left_idx, right_idx, width1 = find_peak_width(model_numpy, peak_idx, w1)
         left_half = model_numpy[left_idx:peak_idx]
         right_half = model_numpy[peak_idx+1:right_idx+1][::-1]
-        difference_model = left_half - right_half
-        sym1 = np.sum(difference_model)/A1
+        sym1 = np.sum(left_half - right_half)/A1
         peaks_model.append( np.array([loc1, width1, A1, sym1]) )
 
         # get symmetricity for ng
@@ -1544,8 +1543,7 @@ def common_peaks(model_path, sample_path):
         left_idx, right_idx, width2 = find_peak_width(ng_output, peak_idx, w2)
         left_half = ng_output[left_idx:peak_idx]
         right_half = ng_output[peak_idx+1:right_idx+1][::-1]
-        difference_ng = left_half - right_half
-        sym2 = np.sum(difference_ng)/A2
+        sym2 = np.sum(left_half - right_half)/A2
         peaks_ng.append( np.array([loc2, width2, A2, sym2]) )
 
     return peaks_model, peaks_ng, model_numpy, ng_output, model_input[0]
