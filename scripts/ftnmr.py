@@ -19,6 +19,8 @@ import scipy
 from scipy.special import binom
 from scipy.stats import truncnorm
 from scipy import interpolate
+from scipy.optimize import linear_sum_assignment
+from scipy.signal import savgol_filter
 import hyperopt
 
 import tensorflow as tf
@@ -1352,7 +1354,7 @@ def common_peaks_with_accuracy(model_path, accuracy_path, sample_paths, sample_n
     pthres = 0.2
     wthres = 15.0
     Athres = 25.0
-    loc_thres = 5
+    loc_thres = 10
 
     # pick peaks
     peak_model = ng.analysis.peakpick.pick(model_numpy, pthres=pthres)
@@ -1369,6 +1371,66 @@ def common_peaks_with_accuracy(model_path, accuracy_path, sample_paths, sample_n
                     peaks_model.append(peak_model[j])
 
     return peaks_model, peaks_ng, model_numpy, ng_output
+
+def find_peak_width(spectrum, peak_idx, peak_width, window_size=15, polyorder=3):
+    """
+    Find the width of a peak in a spectrum using a smoothing filter.
+
+    Parameters
+    ----------
+    spectrum: ndarray
+        Input spectrum with peaks.
+    peak_idx: int
+        Index of the peak to find the width for.
+    window_size: int
+        Size of the smoothing window (default 15)
+    polyorder: int
+        Order of the polynomial used for smoothing (default 3)
+
+    Returns
+    -------
+    left_idx: int
+        left index of the peak width
+    right_idx: int
+        right index of the peak width
+    new_width: float
+        newly modified peak width (could be the same as the input peak width)
+    """
+    # Apply a Savitzky-Golay filter to smooth the data and get half width
+    smoothed_arr = savgol_filter(spectrum, window_size, polyorder)
+    quotient, remainder = np.divmod(peak_width, 2)
+    half_width = int(quotient)
+
+    # Find the nearest local minimum on the left side of the peak
+    left_idx = peak_idx - 3
+    for idx in range(0, half_width):
+        if left_idx < 0:
+            break
+        if smoothed_arr[left_idx] < smoothed_arr[left_idx - 1]:
+            break
+        left_idx -= 1
+
+    # Find the nearest local minimum on the right side of the peak
+    right_idx = peak_idx + 3
+    for idx in range(0, half_width):
+        if len(smoothed_arr) < right_idx:
+            break
+        if smoothed_arr[right_idx] < smoothed_arr[right_idx + 1]:
+            break
+        right_idx += 1
+
+    # Find the minimum distance
+    left_dist = peak_idx - left_idx
+    right_dist = right_idx - peak_idx
+    min_dist = min(left_dist, right_dist, half_width)
+
+    # Adjust the indices so that they are both at the same distance from the peak center
+    left_idx = peak_idx - min_dist
+    right_idx = peak_idx + min_dist
+    new_width = float(right_idx - left_idx) + remainder
+
+    # Return the indices of the peak's width and the new width
+    return left_idx, right_idx, new_width
 
 def common_peaks(model_path, sample_path):
     """
@@ -1421,52 +1483,72 @@ def common_peaks(model_path, sample_path):
 
     # peak, width, amplitude, location threshold for ng_output and model output
     pthres = 0.2
-    wthres = 15.0
-    Athres = 25.0
-    loc_thres = 5
+    wthres = 9.499096
+    Athres = 31.442104
 
-    # pick peaks
+    # pick peaks with pick threshold
+    pthres = 0.2
     peak_model = ng.analysis.peakpick.pick(model_numpy, pthres=pthres)
     peak_ng = ng.analysis.peakpick.pick(ng_output, pthres=pthres)
 
-    # Find matching elements within the threshold
-    peaks_ng = []
+    # Define the lists of positions (locations)
+    A = np.array([peak[0] for peak in peak_model])
+    B = np.array([peak[0] for peak in peak_ng])
+
+    # Find the optimal matching indices between A and B
+    distances = np.abs(A[:, None] - B[None, :])
+    row_ind, col_ind = linear_sum_assignment(distances)
+
+    # get indices for common peaks
+    def cond(args):
+        cond1 = (wthres < args[1]) and (Athres < args[2])
+        cond2 = (wthres < args[3]) and (Athres < args[4])
+        return cond1 and cond2
+
+    def gen(peaks_A, peaks_B):
+        ite = enumerate(zip(peaks_A, peaks_B))
+        for ind, ( (_, _, w1, A1) , (_, _, w2, A2)) in ite:
+            yield [ind, w1, A1, w2, A2]
+
+    peaks_m = peak_model[row_ind]
+    peaks_n = peak_ng[col_ind]
+    indices_common = [args[0] for args in gen(peaks_m, peaks_n) if cond(args)]
+
+    # list to which to add common peaks
     peaks_model = []
-    for i in range(len(peak_ng)):
-        for j in range(len(peak_model)):
-            if abs(peak_ng[i][0] - peak_model[j][0]) <= loc_thres:
-                if Athres < peak_ng[i][3] and wthres < peak_ng[i][2]:
-                    peaks_ng.append(peak_ng[i])
-                    peaks_model.append(peak_model[j])
+    peaks_ng = []
 
     # If no common peaks were found, do not proceed to calculate symmetricity
-    peak_num = len(peaks_model)
+    peak_num = len(indices_common)
     if peak_num == 0 :
         print(f"-----no common peaks found-----")
-        return peaks_model, peaks_ng, model_numpy, ng_output, model_input
+        return peaks_model, peaks_ng, model_numpy, ng_output, model_input[0]
 
     # get symmetricities for both ng and model peaks
-    for n in range(peak_num):
+    for idx in indices_common:
         # get loc, w, A of peaks (model and ng)
-        loc1, _, w1, A1 = peaks_model[n]
-        loc2, _, w2, A2 = peaks_ng[n]
-        scale = 2
+        loc1, _, w1, A1 = peaks_m[idx]
+        loc2, _, w2, A2 = peaks_n[idx]
 
         # get symmetricity for model
-        model_area = model_numpy[int(loc1-scale*w1):int(loc1+scale*w1+1)]
-        model_len = len(model_area)
-        difference_model = model_numpy[:(model_len//2)+1] - model_numpy[::-1][:model_len//2+1]
+        peak_idx = int(loc1)
+        left_idx, right_idx, width1 = find_peak_width(model_numpy, peak_idx, w1)
+        left_half = model_numpy[left_idx:peak_idx]
+        right_half = model_numpy[peak_idx+1:right_idx+1][::-1]
+        difference_model = left_half - right_half
         sym1 = np.sum(difference_model)/A1
-        peaks_model[n] = np.array([loc1, w1, A1, sym1])
+        peaks_model.append( np.array([loc1, width1, A1, sym1]) )
 
         # get symmetricity for ng
-        ng_area = ng_output[int(loc2-scale*w2):int(loc2+scale*w2+1)]
-        ng_len = len(ng_area)
-        difference_ng = ng_output[:(ng_len//2)+1] - ng_output[::-1][:ng_len//2+1]
+        peak_idx = int(loc2)
+        left_idx, right_idx, width2 = find_peak_width(ng_output, peak_idx, w2)
+        left_half = ng_output[left_idx:peak_idx]
+        right_half = ng_output[peak_idx+1:right_idx+1][::-1]
+        difference_ng = left_half - right_half
         sym2 = np.sum(difference_ng)/A2
-        peaks_ng[n] = np.array([loc2, w2, A2, sym2])
+        peaks_ng.append( np.array([loc2, width2, A2, sym2]) )
 
-    return peaks_model, peaks_ng, model_numpy, ng_output, model_input
+    return peaks_model, peaks_ng, model_numpy, ng_output, model_input[0]
 
 def spectrum_gen(abundance=50.0, T2=100.0, angle=0.0, cs=0.5, shift_minimum=0.6, std=0.0):
     """
@@ -1521,12 +1603,12 @@ def estimate_WAS(ATA_values, pthres=0.2):
     WAS_values: ndarray
         numpy array of width, amplitude, symmetricity. The shape is (3,)
     """
-    spec = spectrometer(shift_maximum=128.0, shift_minimum=0.6, std=0.0)
+    spec = ftnmr.spectrometer(shift_maximum=128.0, shift_minimum=0.6, std=0.0)
     couplings = []
 
     # prepare sample and measure the spectrum
     hydrogens = {'a':(ATA_values[0], 0.5, ATA_values[1])}
-    mole = molecule(hydrogens=hydrogens, couplings=couplings)
+    mole = ftnmr.molecule(hydrogens=hydrogens, couplings=couplings)
     moles = {'A': (mole, 1)}
     spec.ps[1] = float(2*np.pi*ATA_values[2]/180.0)
     spec.measure(moles=moles)
@@ -1537,14 +1619,16 @@ def estimate_WAS(ATA_values, pthres=0.2):
         pthres = h
     loc, _, w, A = ng.analysis.peakpick.pick(spec.spectra, pthres=pthres)[0]
 
-    # get peak area
-    scale = 2
-    peak_area = spec.spectra[int(loc-scale*w):int(loc+scale*w+1)]
-    area_len = len(peak_area)
+    # get indices for symmetricity calculation
+    half_width = int(np.divmod(w, 2)[0])
+    peak_idx = int(loc)
+    left_idx = peak_idx - half_width
+    right_idx = peak_idx + half_width
 
-    # get difference sum divided by amplitude around the peak
-    difference = spec.spectra[:(area_len//2)+1] - spec.spectra[::-1][:area_len//2+1]
-    sym = np.sum(difference)/A
+    # get symmetricity
+    left_half = spec.measure[left_idx:peak_idx]
+    right_half = spec.measure[peak_idx+1:right_idx+1][::-1]
+    sym = np.sum(left_half - right_half)/A
 
     return np.array([w, A, sym], dtype='float32')
 
