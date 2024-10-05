@@ -1483,8 +1483,8 @@ def common_peaks(model_path, sample_path):
 
     # peak, width, amplitude, location threshold for ng_output and model output
     pthres = 0.2
-    wthres = 9.499096
-    Athres = 31.442104
+    wthres = 9.4
+    Athres = 31.5
 
     # pick peaks with pick threshold
     pthres = 0.2
@@ -1601,12 +1601,12 @@ def estimate_WAS(ATA_values, pthres=0.2):
     WAS_values: ndarray
         numpy array of width, amplitude, symmetricity. The shape is (3,)
     """
-    spec = ftnmr.spectrometer(shift_maximum=128.0, shift_minimum=0.6, std=0.0)
+    spec = spectrometer(shift_maximum=128.0, shift_minimum=0.6, std=0.0)
     couplings = []
 
     # prepare sample and measure the spectrum
     hydrogens = {'a':(ATA_values[0], 0.5, ATA_values[1])}
-    mole = ftnmr.molecule(hydrogens=hydrogens, couplings=couplings)
+    mole = molecule(hydrogens=hydrogens, couplings=couplings)
     moles = {'A': (mole, 1)}
     spec.ps[1] = float(2*np.pi*ATA_values[2]/180.0)
     spec.measure(moles=moles)
@@ -1624,8 +1624,8 @@ def estimate_WAS(ATA_values, pthres=0.2):
     right_idx = peak_idx + half_width
 
     # get symmetricity
-    left_half = spec.measure[left_idx:peak_idx]
-    right_half = spec.measure[peak_idx+1:right_idx+1][::-1]
+    left_half = spec.spectra[left_idx:peak_idx]
+    right_half = spec.spectra[peak_idx+1:right_idx+1][::-1]
     sym = np.sum(left_half - right_half)/A
 
     return np.array([w, A, sym], dtype='float32')
@@ -1825,14 +1825,16 @@ def estimate_ATA(WAS_values, database_path):
     ms_length = max([ len(s[1]['method'])  for s in method_list])
 
     # Bayesian objective function with the search space
-    last_result = None # we want to store best result from optimizer
+    last_result = None # best result from optimizer if terminated early
+    best_result = None # keep track of best result
     best_cost = 1e+10
     space = {
         'scalar': hyperopt.hp.loguniform('scalar', 0, 35),
         'optimizer': hyperopt.hp.choice('optimizer', method_list)}
 
     def objective_fn(params):
-        nonlocal last_result, best_cost # keep track of last result and best cost
+        # keep track of last, best results and best cost value
+        nonlocal last_result, best_result, best_cost 
 
         # params from search space
         scalar = params['scalar']
@@ -1863,6 +1865,7 @@ def estimate_ATA(WAS_values, database_path):
         # print out the new best method for sanity check
         if cost < best_cost:
             best_cost = cost
+            best_result = last_result
             print(f"new best method/scalar :{method}/{scalar}")
 
         return cost
@@ -1888,18 +1891,7 @@ def estimate_ATA(WAS_values, database_path):
     print(f"scalar    -> {scalar}")
     print()
 
-    # return the last result if optimization is done before max_evals
-    if len(trials) != max_evals or trials.best_trial['tid'] == max_evals-1: 
-        return last_result
-
-    # in case Bayesian optimization evaluated until max_evals
-    cost_fn = opt_inputs['fun']
-    def cost_fn_scaled(initial_ATA):
-        return scalar*cost_fn(initial_ATA)
-
-    # optimize with scaled cost_fn
-    opt_inputs['fun'] = cost_fn_scaled
-    return optimizer(**opt_inputs)
+    return best_result
 
 class NMR_result():
     """
