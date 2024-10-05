@@ -1853,7 +1853,7 @@ def estimate_ATA(WAS_values, database_path):
         # with the rescaled loss fn get the result for Bayesian opt.
         try:
             last_result = optimizer(**temp_inputs)
-        except IndexError:
+        except:
             return np.random.uniform(0.1, 1.0) # punish this optimizer!!
 
         # the output for Bayesian opt must be scalar
