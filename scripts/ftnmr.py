@@ -1926,13 +1926,6 @@ class NMR_result():
         abundance (proton), T2, angle (phase shift) of peaks in model corrected spectra
     ATA_ng: list[ndarray]
         same as ATA_model, but for nmrglue processed spectrum
-    accuracy_model: list[ndarray]
-        this list contains accuracy of width and amplitude of model corrected peaks. The first
-        element is for width, the second element is for peak amplitude. The unit is in percent
-        (that is, 1.5 means 1.5% accuracy). The accuracy is measured against peak with zero
-        phase shift angle. 
-    accuracy_ng: list[ndarray]
-        same as accuracy_model, but for nmrglue processed spectrum
     """
     def __init__(self, model_path, sample_path, database_path):
         # common peaks method and its output
@@ -1945,7 +1938,9 @@ class NMR_result():
         self.num_peaks      = len(self.peaks_model)
         
         # no ATA values if no common peaks were found
-        if len(self.peaks_model) == 0: return
+        if len(self.peaks_model) == 0: 
+            print("no common peaks found to be optimized")
+            return
         
         # estimate the ATA values for each peak
         self.ATA_model      = []
@@ -1959,16 +1954,6 @@ class NMR_result():
             self.ATA_ng.append(estimate_ATA(LWAS_ng[1:], database_path).x)
             print()
             
-        # get accuracy of width and amplitude for both model and nmrglue
-        self.accuracy_model = []
-        self.accuracy_ng = []
-        for ind in range(self.num_peaks):
-            ATA, WAS = self.ATA_model[ind], self.peaks_model[ind][1:]
-            self.accuracy_model.append( self.accuracy(ATA, WAS) )
-            
-            ATA, WAS = self.ATA_ng[ind], self.peaks_ng[ind][1:]
-            self.accuracy_ng.append( self.accuracy(ATA, WAS) )
-
     def accuracy(self, ATA_values, WAS_values):
         """
         returns accuracy of width and amplitude for the given ATA estimate
@@ -1981,11 +1966,11 @@ class NMR_result():
         _,_,w,A = ng.analysis.peakpick.pick(spectrum_target, pthres=0.2)[0]
 
         # get accuracies of width and amplitude
-        accuracy = np.array([
+        output = np.array([
             100*np.abs(w-WAS_values[0])/w,
             100*np.abs(A-WAS_values[1])/A])
         
-        return accuracy
+        return output
             
     def WAS_list(self):
         """
@@ -1996,23 +1981,16 @@ class NMR_result():
     
     def ATA_list(self):
         """
-        returns ATA values of model and nmrglue results
+        returns ATA value of model and nmrglue results
         """
         azip = zip(self.ATA_model, self.ATA_ng)
         return [(atam, atan) for (atam, atan) in azip]
 
-    def accuracy_list(self):
-        """
-        returns accuracy of model and nmrglue results
-        """        
-        azip = zip(self.accuracy_model, self.accuracy_ng)
-        return [(acm, acn) for (acm, acn) in azip]
-    
     def __repr__(self):
         # in case there is no common peaks
         if len(self.peaks_model) == 0: return "no common peaks were found; no result"
     
-        lzip = zip(self.WAS_list(), self.ATA_list(), self.accuracy_list())
+        lzip = zip(self.WAS_list(), self.ATA_list())
         output = "NMR_result(\n"
         output += "[the first element is for DNN model, the second element is for nmrglue]\n"
 
@@ -2020,7 +1998,6 @@ class NMR_result():
             output += f"  --- the {ind+1}-th peak ---\n"
             output += f"  WAS_values : {w}\n"
             output += f"  ATA_values : {a}\n"
-            output += f"  accuracy   : {ac}\n"
             output += "\n"
         output += ")\n"
 
