@@ -1276,9 +1276,9 @@ def bruker_data(fid_path, data_length=32768, max_height=5.0, std=0.02):
     if max_index == 0:
         data_model = data.real
     if max_index == 1:
-        data_model = data.imag
-    if max_index == 2:
         data_model = -data.real
+    if max_index == 2:
+        data_model = data.imag
     if max_index == 3:
         data_model = -data.imag
 
@@ -1994,7 +1994,7 @@ class NMR_result():
         output = "NMR_result(\n"
         output += "[the first element is for DNN model, the second element is for nmrglue]\n"
 
-        for ind, (w, a, ac) in enumerate(lzip):
+        for ind, (w, a) in enumerate(lzip):
             output += f"  --- the {ind+1}-th peak ---\n"
             output += f"  WAS_values : {w}\n"
             output += f"  ATA_values : {a}\n"
